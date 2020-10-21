@@ -40,5 +40,4 @@ public class Sensor {
 	public void setReading(Double reading) {
 		this.reading = reading;
 	}
-
 }
