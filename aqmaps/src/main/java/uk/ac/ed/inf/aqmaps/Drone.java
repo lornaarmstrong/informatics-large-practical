@@ -1,5 +1,10 @@
 package uk.ac.ed.inf.aqmaps;
 
+/**
+ * Drone class to represent Drone, with a position and number of 
+ * moves as attributes.
+ *
+ */
 public class Drone {
 	
 	private Coordinate position;

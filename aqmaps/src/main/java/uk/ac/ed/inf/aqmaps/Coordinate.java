@@ -1,5 +1,9 @@
 package uk.ac.ed.inf.aqmaps;
 
+/**
+ * Coordinate class, as pairs of latitude and longitude values
+ *
+ */
 public class Coordinate {
 	
 	private double latitude;
