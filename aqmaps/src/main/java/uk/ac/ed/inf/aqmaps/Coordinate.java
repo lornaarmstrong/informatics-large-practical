@@ -44,5 +44,7 @@ public class Coordinate {
 		
 		return (permittedLatitude && permittedLongitude);
 	}
-
+	
+	// TODO method:
+	// - add if in disallowed building area...
 }
