@@ -1,5 +1,9 @@
 package uk.ac.ed.inf.aqmaps;
 
+/**
+ * Sensor class to represent a sensor for air pollution levels
+ *
+ */
 public class Sensor {
 	
 	private final String location;
