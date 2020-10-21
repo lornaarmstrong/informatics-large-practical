@@ -40,4 +40,6 @@ public class Sensor {
 	public void setReading(Double reading) {
 		this.reading = reading;
 	}
+	
+	//TODO method for what3words to coordinate
 }

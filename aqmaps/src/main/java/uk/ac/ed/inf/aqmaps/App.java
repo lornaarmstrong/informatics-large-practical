@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,10 +19,18 @@ public class App
         String day = args[0];
         String month = args[1];
         String year = args[2];
-        double startLatitude = Double.parseDouble(args[3]);
-        double startLongitude = Double.parseDouble(args[4]);
+        
+        try {
+        	double startLatitude = Double.parseDouble(args[3]);
+        	double startLongitude = Double.parseDouble(args[4]);
+        } catch (NumberFormatException e) {
+        	System.err.println("Argument" + args[0] + " must be a decimal number");
+        }
+        
         int seed = Integer.parseInt(args[5]);
         int portNumber = Integer.parseInt(args[6]);
+        
+        // TODO Get all sensors and store in sensorList
        
     }
 }
