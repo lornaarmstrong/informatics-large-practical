@@ -36,6 +36,5 @@ public class Drone {
 	// - get distance to sensor
 	// - check if within range of sensor
 	// - take reading
-	// -
 
 }
