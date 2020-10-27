@@ -31,10 +31,10 @@ public class App
 		String day = args[0];
 		String month = args[1];
 		String year = args[2];
-        double startLatitude = Double.parseDouble(args[3]);
-        double startLongitude = Double.parseDouble(args[4]);
-        int seed = Integer.parseInt(args[5]);
-        portNumber = Integer.parseInt(args[6]);
+		double startLatitude = Double.parseDouble(args[3]);
+		double startLongitude = Double.parseDouble(args[4]);
+		int seed = Integer.parseInt(args[5]);
+		portNumber = Integer.parseInt(args[6]);
         
         // TODO add input validation / checks
         
