@@ -10,4 +10,16 @@ public class Word {
 	private String words;
 	private String language;
 	private String map;
+	
+	// Getters and Setters
+	
+	public LngLat getCoordinates() {
+		return this.coordinates;
+	}
+	
+	public void setLocation(LngLat coordinates) {
+		this.coordinates = coordinates;
+	}
+	
+	
 }

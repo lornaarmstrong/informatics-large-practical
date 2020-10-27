@@ -32,6 +32,13 @@ public class Coordinate {
 		this.longitude = longitude;
 	}
 	
+	/*
+	 * equality
+	 */
+	public boolean equals(Coordinate coord) {
+		return ((this.latitude == coord.latitude) && (this.longitude == coord.longitude));
+	}
+	
 	/**
 	 * Check if the coordinate is in the confinement area
 	 */

@@ -23,7 +23,7 @@ public class SensorTest
     @Test
     public void testGetCoordinates() throws IOException, InterruptedException
     {
-        Coordinate coord1 = new Coordinate(55.944575, -3.185536);
-        assertEquals( sensor1.getCoords(), coord1);
+        Coordinate coord1 = new Coordinate(55.944575, -3.185236);
+        assertTrue( sensor1.getCoords().equals(coord1));
     }
 }

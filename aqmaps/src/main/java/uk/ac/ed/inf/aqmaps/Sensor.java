@@ -3,6 +3,9 @@ package uk.ac.ed.inf.aqmaps;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
+
+import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.net.URI;
 
@@ -15,8 +18,6 @@ public class Sensor {
 	private String location;
 	private double batteryPercentage;
 	private double reading;
-	private String latitude;
-	private String longitude;
 	
 	public Sensor(String location, double batteryPercentage, double reading) {
 		this.location = location;
@@ -66,9 +67,15 @@ public class Sensor {
         // Check the response.statusCode()
         if (response.statusCode() == 200) {
         	System.out.println("Response recieved correctly, server is working.");
-        	System.out.println(response.body());
         	// Get the latitude and longitude and make it a Coordinate
         	
+        	var word = new Gson().fromJson(response.body(), Word.class);
+        	        
+        	// Get the coordinates of the location
+        	double longitude = word.getCoordinates().getLng();
+        	double latitude = word.getCoordinates().getLat();
+        	Coordinate coordinate = new Coordinate(latitude, longitude);
+        	return coordinate;
         	
         } else {
         	System.out.println("Error - response not found.");
