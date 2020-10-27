@@ -19,7 +19,6 @@ import java.util.List;
  */
 public class App 
 {
-	
 	// Initialise Variables
 	public static List<Sensor> sensorList = new ArrayList<Sensor>();
 	public static FeatureCollection noFlyZones;
@@ -27,8 +26,8 @@ public class App
 	private static Drone drone;
 	public static List<Coordinate> pathCoordinates = new ArrayList<Coordinate>();
 	
-    public static void main( String[] args ) throws IOException, InterruptedException {
-        // Get the input
+	public static void main( String[] args ) throws IOException, InterruptedException {
+		// Get the input
         String day = args[0];
         String month = args[1];
         String year = args[2];
