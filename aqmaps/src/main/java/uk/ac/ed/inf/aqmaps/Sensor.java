@@ -61,8 +61,8 @@ public class Sensor {
 		// Send a GET request to the server to get the what3words details
         var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-        		.uri(URI.create("http://localhost:" + App.portNumber + "/words/" + words[0] + "/" + words[1] + "/" 
-        				+ words[2] + "/details.json"))
+        		.uri(URI.create("http://localhost:" + App.portNumber + "/words/" + words[0] + "/" 
+        				+ words[1] + "/" + words[2] + "/details.json"))
         		.build();
         var response = client.send(request, BodyHandlers.ofString());
         
@@ -85,7 +85,6 @@ public class Sensor {
         	// For other server status codes
         	System.out.println("The status code is " + statusCode);
         }
-        
 		return null;
 	}
 }
