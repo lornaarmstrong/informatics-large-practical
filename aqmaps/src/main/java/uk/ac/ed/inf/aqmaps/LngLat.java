@@ -10,7 +10,7 @@ public class LngLat {
 		return this.lng;
 	}
 	
-	public void setLocation(Double lng) {
+	public void setLng(Double lng) {
 		this.lng = lng;
 	}
 	
