@@ -53,7 +53,7 @@ public class Sensor {
 	/*
 	 *  Find the latitude and longitude for the what3words location, returned as a Coordinate
 	 */
-	public Coordinate getCoords() throws IOException, InterruptedException {
+	public Coordinate getCoordinates() throws IOException, InterruptedException {
 		
 		// Split the what3words into the 3 separate words
 		var words = location.split("\\.");
