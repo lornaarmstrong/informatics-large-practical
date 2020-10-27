@@ -1,6 +1,6 @@
 package uk.ac.ed.inf.aqmaps;
 
-public class Words {
+public class Word {
 
 	// Matching the words details.json structure from the server
 	private String country;
