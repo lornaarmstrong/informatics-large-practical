@@ -61,13 +61,15 @@ public class Sensor {
 		// Send a GET request to the server to get the what3words details
         var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-        		.uri(URI.create("http://localhost:80/words/" + words[0] + "/" + words[1] + "/" + words[2] + "/details.json"))
+        		.uri(URI.create("http://localhost:" + App.portNumber + "/words/" + words[0] + "/" + words[1] + "/" 
+        				+ words[2] + "/details.json"))
         		.build();
         var response = client.send(request, BodyHandlers.ofString());
         
         // Check the response.statusCode()
-        if (response.statusCode() == 200) {
-        	System.out.println("Response recieved correctly, server is working.");
+        int statusCode = response.statusCode();
+        if (statusCode == 200) {
+        	System.out.println("Response recieved correctly.");
         	// Get the latitude and longitude and make it a Coordinate
         	var word = new Gson().fromJson(response.body(), Word.class);
         	// Get the coordinates of the location
@@ -75,8 +77,13 @@ public class Sensor {
         	var latitude = word.getCoordinates().getLat();
         	Coordinate coordinate = new Coordinate(latitude, longitude);
         	return coordinate;
-        } else {
-        	System.out.println("Error - response not found.");
+        } else if (statusCode == 404){
+        	// There is an error with the request
+        	System.out.println("The server cannot find the requested resource [error 404]");
+        }
+        else {
+        	// For other server status codes
+        	System.out.println("The status code is " + statusCode);
         }
         
 		return null;

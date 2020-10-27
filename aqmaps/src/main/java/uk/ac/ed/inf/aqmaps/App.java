@@ -22,6 +22,7 @@ public class App
 	// Initialise Variables
 	public static List<Sensor> sensorList = new ArrayList<Sensor>();
 	public static FeatureCollection noFlyZones;
+	public static int portNumber;
 	
     public static void main( String[] args ) throws IOException, InterruptedException
     {
@@ -29,10 +30,15 @@ public class App
         String day = args[0];
         String month = args[1];
         String year = args[2];
+        
         double startLatitude = Double.parseDouble(args[3]);
-        double startLongitude = Double.parseDouble(args[4]);   
+        double startLongitude = Double.parseDouble(args[4]);
+        // Create a coordinate for the drone start position
+        Coordinate startPoint = new Coordinate(startLatitude, startLongitude);
+        System.out.println("Drone's starting location: " + startPoint.getLatitude() + " " + startPoint.getLongitude());
+        
         int seed = Integer.parseInt(args[5]);
-        int portNumber = Integer.parseInt(args[6]);
+        portNumber = Integer.parseInt(args[6]);
     	
         sensorList = getSensorList(day, month, year);
         noFlyZones = getNoFlyZoneList();
@@ -46,7 +52,7 @@ public class App
 				throws IOException, InterruptedException {
 		var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-        		.uri(URI.create("http://localhost:80/maps/" + year + "/" + month + "/" + day
+        		.uri(URI.create("http://localhost:" + portNumber + "/maps/" + year + "/" + month + "/" + day
         				+ "/air-quality-data.json"))
         		.build();
         var response = client.send(request, BodyHandlers.ofString());
@@ -62,10 +68,10 @@ public class App
 	public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
 		var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-        		.uri(URI.create("http://localhost:80/buildings/no-fly-zones.json"))
+        		.uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
         		.build();
         var response = client.send(request, BodyHandlers.ofString());
-        FeatureCollection features = new Gson().fromJson(response.body(), FeatureCollection.class);
+        FeatureCollection features = FeatureCollection.fromJson(response.body());
         return features;
 	}
 }
