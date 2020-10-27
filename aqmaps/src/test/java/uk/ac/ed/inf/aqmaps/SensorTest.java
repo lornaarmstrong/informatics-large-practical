@@ -26,4 +26,7 @@ public class SensorTest
         Coordinate coord1 = new Coordinate(55.944575, -3.185236);
         assertTrue( sensor1.getCoords().equals(coord1));
     }
+    
+    // TODO further tests
+    // what happens if the what3words isn't in the server?
 }
