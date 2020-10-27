@@ -59,34 +59,34 @@ public class App
         String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
         PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
     }
-
+    
     /*
      * Get the list of all sensors to be visited on the given date (from input) 
      */
-	public static List<Sensor> getSensorList(String day, String month, String year) 
-				throws IOException, InterruptedException {
-		var client = HttpClient.newHttpClient();
+    public static List<Sensor> getSensorList(String day, String month, String year) 
+            throws IOException, InterruptedException {
+        var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-        		.uri(URI.create("http://localhost:" + portNumber + "/maps/" + year + "/" + month + "/" + day
-        				+ "/air-quality-data.json"))
-        		.build();
+                .uri(URI.create("http://localhost:" + portNumber + "/maps/" + year + "/" + month + "/" + day 
+                        + "/air-quality-data.json"))
+                .build();
         var response = client.send(request, BodyHandlers.ofString());
         
         Type listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThatDay = new Gson().fromJson(response.body(), listType);
-		return sensorsForThatDay;
-	}
-	
+        return sensorsForThatDay;
+    }
+    
     /*
      * Get the list of all polygons representing the buildings in the no-fly zone 
      */
-	public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
-		var client = HttpClient.newHttpClient();
+    public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
+        var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-        		.uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
-        		.build();
+                .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
+                .build();
         var response = client.send(request, BodyHandlers.ofString());
         FeatureCollection features = FeatureCollection.fromJson(response.body());
         return features;
-	}
+    }
 }
