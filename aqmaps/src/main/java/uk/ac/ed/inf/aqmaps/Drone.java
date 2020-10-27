@@ -41,10 +41,10 @@ public class Drone {
 	 * Calculate the distance to the next sensor from the drone, 
 	 * using the Euclidean formula
 	 */
-	public double calculateDistance(Sensor sensor) {
-		double valueX = Math.pow((position.getLatitude() - sensor.getLatitude()), 2);
-		double valueY = Math.pow((position.getLongitude() - sensor.getLongitude()), 2);
-	    return Math.sqrt(valueX + valueY);
-	}
+//	public double calculateDistance(Sensor sensor) {
+//		double valueX = Math.pow((position.getLatitude() - sensor.getCoords().latitude), 2);
+//		double valueY = Math.pow((position.getLongitude() - sensor.getCoords().longitude), 2);
+//	    return Math.sqrt(valueX + valueY);
+//	}
 
 }
