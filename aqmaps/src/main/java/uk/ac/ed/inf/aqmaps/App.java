@@ -28,9 +28,9 @@ public class App
 	
 	public static void main( String[] args ) throws IOException, InterruptedException {
 		// Get the input
-        String day = args[0];
-        String month = args[1];
-        String year = args[2];
+		String day = args[0];
+		String month = args[1];
+		String year = args[2];
         double startLatitude = Double.parseDouble(args[3]);
         double startLongitude = Double.parseDouble(args[4]);
         int seed = Integer.parseInt(args[5]);
