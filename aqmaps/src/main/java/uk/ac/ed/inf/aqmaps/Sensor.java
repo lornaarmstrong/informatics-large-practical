@@ -41,5 +41,5 @@ public class Sensor {
 		this.reading = reading;
 	}
 	
-	//TODO method for what3words to coordinate
+	// TODO method for what3words to coordinate
 }

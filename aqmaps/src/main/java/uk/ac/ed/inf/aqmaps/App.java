@@ -1,5 +1,8 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,11 @@ public class App
         int portNumber = Integer.parseInt(args[6]);
         
         // TODO Get all sensors and store in sensorList
+        
+        var client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+        		.uri(URI.create("http://localhost:80/buildings/no-fly-zones"))
+        		.build();
        
     }
 }

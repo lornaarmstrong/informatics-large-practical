@@ -1,7 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
 /**
- * Drone class to represent Drone, with a position and number of 
+ * The Drone class represents a Drone, with a position and number of 
  * moves as attributes.
  *
  */
