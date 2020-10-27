@@ -13,7 +13,7 @@ import org.junit.Test;
 public class SensorTest 
 {
 	// Objects used for the tests
-	Sensor sensor1 = new Sensor("acid.chair.butter", 60.0, 50.0);
+	Sensor sensor1 = new Sensor("acid.chair.butter", 60.0, "50.0");
 	
     /**
      * @throws InterruptedException 

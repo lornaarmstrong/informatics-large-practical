@@ -16,12 +16,12 @@ import java.net.URI;
 public class Sensor {
 	
 	private String location;
-	private double batteryPercentage;
-	private double reading;
+	private double battery;
+	private String reading;
 	
-	public Sensor(String location, double batteryPercentage, double reading) {
+	public Sensor(String location, double battery, String reading) {
 		this.location = location;
-		this.batteryPercentage = batteryPercentage;
+		this.battery = battery;
 		this.reading = reading;
 	}
 	
@@ -34,19 +34,19 @@ public class Sensor {
 		this.location = location;
 	}
 	
-	public double getBatteryPercentage() {
-		return this.batteryPercentage;
+	public double getBattery() {
+		return this.battery;
 	}
 	
-	public void setBatteryPercentage(Double batteryPercentage) {
-		this.batteryPercentage = batteryPercentage;
+	public void setBattery(Double battery) {
+		this.battery = battery;
 	}
 	
-	public double getReading() {
+	public String getReading() {
 		return this.reading;
 	}
 	
-	public void setReading(Double reading) {
+	public void setReading(String reading) {
 		this.reading = reading;
 	}
 	
