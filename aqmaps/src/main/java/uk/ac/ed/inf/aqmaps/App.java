@@ -67,8 +67,8 @@ public class App
             throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + portNumber + "/maps/" + year + "/" + month + "/" + day 
-                        + "/air-quality-data.json"))
+                .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/air-quality-data.json", 
+                        portNumber,year,month,day)))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
         
