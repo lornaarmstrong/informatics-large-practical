@@ -17,7 +17,7 @@ public class Word {
 		return this.coordinates;
 	}
 	
-	public void setLocation(LngLat coordinates) {
+	public void setCoordinates(LngLat coordinates) {
 		this.coordinates = coordinates;
 	}
 	
