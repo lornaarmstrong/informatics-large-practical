@@ -6,6 +6,7 @@ import com.mapbox.geojson.FeatureCollection;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -21,6 +22,7 @@ public class App
 {
     // Initialise Variables
     public static List<Sensor> sensorList = new ArrayList<Sensor>();
+    public static List<Sensor> visitedSensorList = new ArrayList<>();
     public static FeatureCollection noFlyZones;
     public static int portNumber;
     private static Drone drone;
@@ -51,7 +53,16 @@ public class App
         
         // Get the list of sensors and no-fly zones
         sensorList = getSensorList(day, month, year);
-        noFlyZones = getNoFlyZoneList();
+        noFlyZones = getNoFlyZoneList();    
+        
+        
+        // get start node
+        // find nearest node to that
+        Coordinate currentNode = startPoint;
+        Sensor nextSensor = findNearestNode(currentNode);
+        
+        System.out.println("Next sensor: " + nextSensor.getCoordinates());
+        
         
         // Create output files
         String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
@@ -60,6 +71,39 @@ public class App
         PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
     }
     
+    public static Sensor findNearestNode(Coordinate currentNode) throws IOException, InterruptedException {
+        // Check through whole list of not yet added coordinates
+        // for every sensor in the list of not yet visited sensors,
+        double shortestDistance = 0;
+        Sensor nextNode = null;
+        
+        int counter = 0;
+        
+        // Loop through the sensors not yet visited and find the closest to the currentNode
+        for (Sensor sensor : sensorList) {
+            double distance = getEuclideanDistance(currentNode, sensor.getCoordinates());
+            if (counter == 0) {
+                shortestDistance = distance;
+            }
+            if ( distance < shortestDistance) {
+                shortestDistance = distance;
+                
+            }
+            counter++;
+        }
+        return nextNode;
+    }
+
+    /*
+     *  Calculate Euclidean distance between currentNode and sensor
+     */
+    public static double getEuclideanDistance(Coordinate currentNode, Coordinate nextNode) {
+        
+        double valueX = Math.pow((currentNode.getLatitude() - nextNode.getLatitude()), 2);
+        double valueY = Math.pow((currentNode.getLongitude() - nextNode.getLongitude()), 2);
+        return Math.sqrt(valueX + valueY);
+    }
+
     /*
      * Get the list of all sensors to be visited on the given date (from input) 
      */
