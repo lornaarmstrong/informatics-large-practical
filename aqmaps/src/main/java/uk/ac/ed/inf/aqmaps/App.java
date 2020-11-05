@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
+import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 
 import java.io.BufferedWriter;
@@ -33,6 +34,7 @@ public class App
     public static int portNumber;
     private static Drone drone;
     public static List<Coordinate> pathCoordinates = new ArrayList<Coordinate>();
+    public static List<Point> directRoute = new ArrayList<Point>();
     
     public static void main( String[] args ) throws IOException, InterruptedException {
         // Get the input 
@@ -55,24 +57,34 @@ public class App
         // Create drone instance
         var drone = new Drone(startPoint);
         
-        
         // Get the list of sensors and no-fly zones
         sensorList = getSensorList(day, month, year);
         noFlyZones = getNoFlyZoneList();    
-  
+   
         // 1. Add start node to the path
         pathCoordinates.add(startPoint);
+        Point start = Point.fromLngLat(startPoint.getLongitude(), startPoint.getLatitude());
+        System.out.println("Start Node");
+        System.out.println("Lng: " + startPoint.getLongitude());
+        System.out.println("Lat: " + startPoint.getLatitude());
+        directRoute.add(start);
         
         // 2. Find nearest node J and build the partial tour (I, J)
         Sensor nearestSensor = findNearestNode(startPoint);
+        Point nearestSensorPoint = Point.fromLngLat(nearestSensor.getCoordinates().getLongitude(), nearestSensor.getCoordinates().getLatitude());
+        directRoute.add(nearestSensorPoint);
         System.out.println("Nearest Sensor Lat: " + nearestSensor.getCoordinates().getLatitude());
         System.out.println("Nearest Sensor Lng: " + nearestSensor.getCoordinates().getLongitude());
         
         // CHECKING -- PRINTING ALL SENSORS
         ArrayList<Feature> markerFeatures = createMarkers();
+        // CHECKING -- PRINTING ALL PATH SO FAR
+        LineString pathLine = LineString.fromLngLats(directRoute);
+        Geometry pathGeometry = (Geometry) pathLine;
+        Feature pathFeature = Feature.fromGeometry(pathGeometry);
+        markerFeatures.add(pathFeature);
         FeatureCollection allMarkers = FeatureCollection.fromFeatures(markerFeatures);
         writeFile("sensorMap.geojson", allMarkers.toJson());
-        
         
 //        // Create output files
 //        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
