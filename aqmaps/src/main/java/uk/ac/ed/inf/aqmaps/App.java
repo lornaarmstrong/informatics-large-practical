@@ -2,9 +2,13 @@ package uk.ac.ed.inf.aqmaps;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-import com.sun.tools.classfile.TypeAnnotation.Position;
+import com.mapbox.geojson.Geometry;
+import com.mapbox.geojson.Point;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
@@ -42,6 +46,7 @@ public class App
         
         // TODO add input validation / checks
         
+        
         // Create a coordinate for the drone start position
         Coordinate startPoint = new Coordinate(startLatitude, startLongitude);
         System.out.println("Drone's starting location: " + startPoint.getLatitude() + " " 
@@ -50,52 +55,81 @@ public class App
         // Create drone instance
         var drone = new Drone(startPoint);
         
-        // Add the start point to the list of path coordinates
-        pathCoordinates.add(startPoint);
         
         // Get the list of sensors and no-fly zones
         sensorList = getSensorList(day, month, year);
         noFlyZones = getNoFlyZoneList();    
+  
+        // 1. Add start node to the path
+        pathCoordinates.add(startPoint);
+        
+        // 2. Find nearest node J and build the partial tour (I, J)
+        Sensor nearestSensor = findNearestNode(startPoint);
+        System.out.println("Nearest Sensor Lat: " + nearestSensor.getCoordinates().getLatitude());
+        System.out.println("Nearest Sensor Lng: " + nearestSensor.getCoordinates().getLongitude());
+        
+        // CHECKING -- PRINTING ALL SENSORS
+        ArrayList<Feature> markerFeatures = createMarkers();
+        FeatureCollection allMarkers = FeatureCollection.fromFeatures(markerFeatures);
+        writeFile("sensorMap.geojson", allMarkers.toJson());
         
         
-        // get start node
-        // find nearest node to that
-        Coordinate currentNode = startPoint;
-        //Sensor nextSensor = findNearestNode(currentNode);
-        
-        //System.out.println("Next sensor: " + nextSensor.getCoordinates());
-        
-        
-        // Print all sensors
-        for (Sensor sensor: sensorList) {
-            // print sensor as a marker
-        }
-        
-        
-        // Create output files
-        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
-        PrintWriter writer = new PrintWriter(flightpathFile, "UTF-8");
-        String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
-        PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
+//        // Create output files
+//        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
+//        PrintWriter writer = new PrintWriter(flightpathFile, "UTF-8");
+//        String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
+//        PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
     }
     
+    public static void writeFile(String filename, String json) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+        try {
+            writer.write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        writer.close();
+    }
+
+    public static ArrayList<Feature> createMarkers() throws IOException, InterruptedException {
+        var markerFeatures = new ArrayList<Feature>();
+        
+        // Create a Feature for every marker in sensor list
+        for (Sensor sensor: sensorList) {
+            // Create a marker for that coordinate
+            Coordinate coords = sensor.getCoordinates();
+            Point markerPoint = Point.fromLngLat(coords.getLongitude(), coords.getLatitude());
+            Geometry markerGeometry = (Geometry) markerPoint;
+            Feature markerFeature = Feature.fromGeometry(markerGeometry);
+            
+            // Add features  (TODO make this a separate function when needed!)
+            markerFeature.addStringProperty("rgb-string", "#00ff00");
+            markerFeature.addStringProperty("marker-color", "#00ff00");
+            markerFeature.addStringProperty("marker-symbol", "lighthouse");
+            markerFeatures.add(markerFeature);
+        }
+        
+        return markerFeatures;
+    }
+
     public static Sensor findNearestNode(Coordinate currentNode) throws IOException, InterruptedException {
         // Check through whole list of not yet added coordinates
-        // for every sensor in the list of not yet visited sensors,
         double shortestDistance = 0;
-        Sensor nextNode = null;
-        
+        Sensor nextNode = null; // default to null
         int counter = 0;
         
         // Loop through the sensors not yet visited and find the closest to the currentNode
         for (Sensor sensor : sensorList) {
+            // Calculate the distance between the sensor and the start point
             double distance = getEuclideanDistance(currentNode, sensor.getCoordinates());
             if (counter == 0) {
                 shortestDistance = distance;
             }
             if ( distance < shortestDistance) {
+                // update distance
                 shortestDistance = distance;
-                
+                // set nextNode
+                nextNode = sensor;
             }
             counter++;
         }
@@ -145,4 +179,5 @@ public class App
         return features;
     }
    
+    
 }
