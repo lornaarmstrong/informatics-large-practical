@@ -50,7 +50,7 @@ public class App
         
         
         // Create a coordinate for the drone start position
-        Coordinate startPoint = new Coordinate(startLatitude, startLongitude);
+        var startPoint = new Coordinate(startLatitude, startLongitude);
         System.out.println("Drone's starting location: " + startPoint.getLatitude() + " " 
                 + startPoint.getLongitude());
         
@@ -63,36 +63,38 @@ public class App
    
         // 1. Add start node to the path
         pathCoordinates.add(startPoint);
-        Point start = Point.fromLngLat(startPoint.getLongitude(), startPoint.getLatitude());
+        var start = Point.fromLngLat(startPoint.getLongitude(), startPoint.getLatitude());
         System.out.println("Start Node");
         System.out.println("Lng: " + startPoint.getLongitude());
         System.out.println("Lat: " + startPoint.getLatitude());
         directRoute.add(start);
         
         // 2. Find nearest node J and build the partial tour (I, J)
-        Sensor nearestSensor = findNearestNode(startPoint);
-        Point nearestSensorPoint = Point.fromLngLat(nearestSensor.getCoordinates().getLongitude(), nearestSensor.getCoordinates().getLatitude());
+        var nearestSensor = findNearestNode(startPoint);
+        var nearestSensorPoint = Point.fromLngLat(nearestSensor.getCoordinates().getLongitude(), nearestSensor.getCoordinates().getLatitude());
+        // Add the point of the sensor to the path
         directRoute.add(nearestSensorPoint);
         System.out.println("Nearest Sensor Lat: " + nearestSensor.getCoordinates().getLatitude());
         System.out.println("Nearest Sensor Lng: " + nearestSensor.getCoordinates().getLongitude());
-       
+        // Add sensor to list of visited nodes
+        visitedSensorList.add(nearestSensor);
         
         // CHECKING -- PRINTING ALL SENSORS
-        ArrayList<Feature> markerFeatures = createMarkers();
+        var markerFeatures = createMarkers();
         // CHECKING -- PRINTING START LOCATION
-        Point pointStart = Point.fromLngLat(startLongitude, startLatitude);
-        Geometry startGeometry = (Geometry) pointStart;
-        Feature startFeature = Feature.fromGeometry(startGeometry);
+        var pointStart = Point.fromLngLat(startLongitude, startLatitude);
+        var startGeometry = (Geometry) pointStart;
+        var startFeature = Feature.fromGeometry(startGeometry);
         startFeature.addStringProperty("rgb-string", "#000000");
         startFeature.addStringProperty("marker-color", "#000000");
         startFeature.addStringProperty("marker-symbol", "lighthouse");
         markerFeatures.add(startFeature);
         // CHECKING -- PRINTING ALL PATH SO FAR
-        LineString pathLine = LineString.fromLngLats(directRoute);
-        Geometry pathGeometry = (Geometry) pathLine;
-        Feature pathFeature = Feature.fromGeometry(pathGeometry);
+        var pathLine = LineString.fromLngLats(directRoute);
+        var pathGeometry = (Geometry) pathLine;
+        var pathFeature = Feature.fromGeometry(pathGeometry);
         markerFeatures.add(pathFeature);
-        FeatureCollection allMarkers = FeatureCollection.fromFeatures(markerFeatures);
+        var allMarkers = FeatureCollection.fromFeatures(markerFeatures);
         writeFile("sensorMap.geojson", allMarkers.toJson());
         
 //        // Create output files
@@ -118,10 +120,10 @@ public class App
         // Create a Feature for every marker in sensor list
         for (Sensor sensor: sensorList) {
             // Create a marker for that coordinate
-            Coordinate coords = sensor.getCoordinates();
-            Point markerPoint = Point.fromLngLat(coords.getLongitude(), coords.getLatitude());
-            Geometry markerGeometry = (Geometry) markerPoint;
-            Feature markerFeature = Feature.fromGeometry(markerGeometry);
+            var coords = sensor.getCoordinates();
+            var markerPoint = Point.fromLngLat(coords.getLongitude(), coords.getLatitude());
+            var markerGeometry = (Geometry) markerPoint;
+            var markerFeature = Feature.fromGeometry(markerGeometry);
             
             // Add features  (TODO make this a separate function when needed!)
             markerFeature.addStringProperty("rgb-string", "#00ff00");
@@ -135,14 +137,14 @@ public class App
 
     public static Sensor findNearestNode(Coordinate currentNode) throws IOException, InterruptedException {
         // Check through whole list of not yet added coordinates
-        double shortestDistance = 0;
+        var shortestDistance = 0.0;
         Sensor nextNode = null; // default to null
-        int counter = 0;
+        var counter = 0;
         
         // Loop through the sensors not yet visited and find the closest to the currentNode
         for (Sensor sensor : sensorList) {
             // Calculate the distance between the sensor and the start point
-            double distance = getEuclideanDistance(currentNode, sensor.getCoordinates());
+            var distance = getEuclideanDistance(currentNode, sensor.getCoordinates());
             if (counter == 0) {
                 shortestDistance = distance;
             }
@@ -161,11 +163,11 @@ public class App
      *  Calculate Euclidean distance between currentNode and sensor
      */
     public static double getEuclideanDistance(Coordinate currentNode, Coordinate nextNode) { 
-        double x1 = currentNode.getLatitude();
-        double y1 = currentNode.getLongitude();
-        double x2 = nextNode.getLatitude();
-        double y2 = nextNode.getLongitude();
-        double distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+        var x1 = currentNode.getLatitude();
+        var y1 = currentNode.getLongitude();
+        var x2 = nextNode.getLatitude();
+        var y2 = nextNode.getLongitude();
+        var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
         return distance;
     }
 
@@ -175,13 +177,13 @@ public class App
     public static List<Sensor> getSensorList(String day, String month, String year) 
             throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
+        var request = HttpRequest.newBuilder()
                 .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/air-quality-data.json", 
                         portNumber,year,month,day)))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
         
-        Type listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
+        var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThatDay = new Gson().fromJson(response.body(), listType);
         return sensorsForThatDay;
     }
@@ -192,7 +194,7 @@ public class App
     public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
 
         var client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
+        var request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
