@@ -3,6 +3,8 @@ package uk.ac.ed.inf.aqmaps;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mapbox.geojson.FeatureCollection;
+import com.sun.tools.classfile.TypeAnnotation.Position;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
@@ -59,9 +61,15 @@ public class App
         // get start node
         // find nearest node to that
         Coordinate currentNode = startPoint;
-        Sensor nextSensor = findNearestNode(currentNode);
+        //Sensor nextSensor = findNearestNode(currentNode);
         
-        System.out.println("Next sensor: " + nextSensor.getCoordinates());
+        //System.out.println("Next sensor: " + nextSensor.getCoordinates());
+        
+        
+        // Print all sensors
+        for (Sensor sensor: sensorList) {
+            
+        }
         
         
         // Create output files
@@ -97,11 +105,13 @@ public class App
     /*
      *  Calculate Euclidean distance between currentNode and sensor
      */
-    public static double getEuclideanDistance(Coordinate currentNode, Coordinate nextNode) {
-        
-        double valueX = Math.pow((currentNode.getLatitude() - nextNode.getLatitude()), 2);
-        double valueY = Math.pow((currentNode.getLongitude() - nextNode.getLongitude()), 2);
-        return Math.sqrt(valueX + valueY);
+    public static double getEuclideanDistance(Coordinate currentNode, Coordinate nextNode) { 
+        double x1 = currentNode.getLatitude();
+        double y1 = currentNode.getLongitude();
+        double x2 = nextNode.getLatitude();
+        double y2 = nextNode.getLongitude();
+        double distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+        return distance;
     }
 
     /*
