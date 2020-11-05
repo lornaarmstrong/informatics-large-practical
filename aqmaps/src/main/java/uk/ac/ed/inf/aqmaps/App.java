@@ -75,9 +75,18 @@ public class App
         directRoute.add(nearestSensorPoint);
         System.out.println("Nearest Sensor Lat: " + nearestSensor.getCoordinates().getLatitude());
         System.out.println("Nearest Sensor Lng: " + nearestSensor.getCoordinates().getLongitude());
+       
         
         // CHECKING -- PRINTING ALL SENSORS
         ArrayList<Feature> markerFeatures = createMarkers();
+        // CHECKING -- PRINTING START LOCATION
+        Point pointStart = Point.fromLngLat(startLongitude, startLatitude);
+        Geometry startGeometry = (Geometry) pointStart;
+        Feature startFeature = Feature.fromGeometry(startGeometry);
+        startFeature.addStringProperty("rgb-string", "#000000");
+        startFeature.addStringProperty("marker-color", "#000000");
+        startFeature.addStringProperty("marker-symbol", "lighthouse");
+        markerFeatures.add(startFeature);
         // CHECKING -- PRINTING ALL PATH SO FAR
         LineString pathLine = LineString.fromLngLats(directRoute);
         Geometry pathGeometry = (Geometry) pathLine;
