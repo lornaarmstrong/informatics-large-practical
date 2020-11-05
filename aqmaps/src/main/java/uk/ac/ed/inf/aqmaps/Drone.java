@@ -8,11 +8,12 @@ package uk.ac.ed.inf.aqmaps;
 public class Drone {
 	
 	private Coordinate position;
-	private int moves = 150;
+	private int moves;
 	
 	// Constructor for Drone
 	public Drone(Coordinate position) {
 		this.position = position;
+		this.moves = 150;
 	}
 	
 	// Getters and Setters
@@ -37,14 +38,4 @@ public class Drone {
 	// - check if within range of sensor
 	// - take reading
 	
-	/**
-	 * Calculate the distance to the next sensor from the drone, 
-	 * using the Euclidean formula
-	 */
-//	public double calculateDistance(Sensor sensor) {
-//		double valueX = Math.pow((position.getLatitude() - sensor.getCoords().latitude), 2);
-//		double valueY = Math.pow((position.getLongitude() - sensor.getCoords().longitude), 2);
-//	    return Math.sqrt(valueX + valueY);
-//	}
-
 }
