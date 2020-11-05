@@ -68,7 +68,7 @@ public class App
         
         // Print all sensors
         for (Sensor sensor: sensorList) {
-            
+            // print sensor as a marker
         }
         
         
@@ -135,6 +135,7 @@ public class App
      * Get the list of all polygons representing the buildings in the no-fly zone 
      */
     public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
+
         var client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
@@ -143,4 +144,5 @@ public class App
         FeatureCollection features = FeatureCollection.fromJson(response.body());
         return features;
     }
+   
 }
