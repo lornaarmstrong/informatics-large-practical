@@ -84,9 +84,10 @@ public class App
         while (visitedSensorList.size() < sensorList.size()) {
             // 3. Select random node (N) that is not yet visited
             int sensorCount = 0;
-            for (Sensor sensor : sensorList) {
+            for (int i = 0; i < sensorList.size(); i++) {
                 System.out.println("Checking sensors " + sensorCount);
                 sensorCount++;
+                Sensor sensor = sensorList.get(i);
                 if (!visitedSensorList.contains(sensor)) {
                     // 4. Choose the edge (i,j) from the current path with the minimum value of:
                     // distance(i, N) + distance (N, j) - distance(i, j)
@@ -99,12 +100,12 @@ public class App
                     
                     // loop through all edges in path
                     System.out.println("Loop through all edges in path");
-                    for (int i = 0; i < directRoute.size() - 1; i++) {
+                    for (int j = 0; j < directRoute.size() - 1; j++) {
                         // Consider an i and a j node
-                        System.out.println("I: " + i);
-                        Point temporaryNodeI = directRoute.get(i);
+                        System.out.println("I: " + j);
+                        Point temporaryNodeI = directRoute.get(j);
                         System.out.println("temp I: " + temporaryNodeI.longitude() + " " + temporaryNodeI.latitude());
-                        Point temporaryNodeJ = directRoute.get(i+1);
+                        Point temporaryNodeJ = directRoute.get(j+1);
                         System.out.println("temp J: " + temporaryNodeJ.longitude() + " " + temporaryNodeJ.latitude());
                         double distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
                         double distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
@@ -126,12 +127,12 @@ public class App
                     
                     // Insert the sensor into the path between nodes I and J
                     // Loop through directRoute to find where to insert
-                    for (int i = 0; i < directRoute.size(); i++) {
+                    for (int j = 0; j < directRoute.size(); j++) {
                         // when you find nodeI
-                        Point node = directRoute.get(i);
+                        Point node = directRoute.get(j);
                         
                         if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
-                            directRoute.add(i+1, nodeN);
+                            directRoute.add(j+1, nodeN);
                             System.out.println("Point added! ");
                         }
                     }
@@ -141,6 +142,9 @@ public class App
                 }
             }
         }
+        
+        // Back to start
+        directRoute.add(startPoint);
         
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
