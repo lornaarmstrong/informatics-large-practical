@@ -33,8 +33,7 @@ public class App
     public static FeatureCollection noFlyZones;
     public static int portNumber;
     private static Drone drone;
-    public static List<Coordinate> pathCoordinates = new ArrayList<Coordinate>();
-    public static List<Point> directRoute = new ArrayList<Point>();
+    public static List<Point> path = new ArrayList<Point>();
     
     public static void main( String[] args ) throws IOException, InterruptedException {
         // Get the input 
@@ -48,36 +47,35 @@ public class App
         
         // TODO add input validation / checks
         
-        
-        // Create a coordinate for the drone start position
-        var start = new Coordinate(startLatitude, startLongitude);
-        System.out.println("Drone's starting location: " + start.getLatitude() + " " 
-                + start.getLongitude());
-        
-        // Create drone instance
-        var drone = new Drone(start);
-        
         // Get the list of sensors and no-fly zones
         sensorList = getSensorList(day, month, year);
         noFlyZones = getNoFlyZoneList();    
+        
+        // Create the drone's starting point and drone instance
+        var startPoint = Point.fromLngLat(startLongitude, startLatitude);
+        var drone = new Drone(startPoint);
+        System.out.println("Drone starting location: " + startPoint.longitude() + " " + startPoint.latitude());
    
         // 1. Add start node to the path
-        pathCoordinates.add(start);
-        var startPoint = Point.fromLngLat(start.getLongitude(), start.getLatitude());
-        System.out.println("Start Node");
-        System.out.println("Lng: " + start.getLongitude());
-        System.out.println("Lat: " + start.getLatitude());
-        directRoute.add(startPoint);
+        path.add(startPoint);
         
-        // 2. Find nearest node J and build the partial tour (I, J)
+        // 2. Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
-        var nearestSensorPoint = Point.fromLngLat(nearestSensor.getCoordinates().getLongitude(), nearestSensor.getCoordinates().getLatitude());
-        // Add the point of the sensor to the path
-        directRoute.add(nearestSensorPoint);
+        var nearestSensorPoint = Point.fromLngLat(nearestSensor.getCoordinates().getLongitude(), 
+                    nearestSensor.getCoordinates().getLatitude());
+        
+        // Move the drone to it
+        
+        // If drone is within the sensor range, take the reading
+        if (drone.withinSensorRange(nearestSensor)) {
+            
+        }
+        
+        // Update path and listed of visited sensors to contain the nearest sensor
+        path.add(nearestSensorPoint);
+        visitedSensorList.add(nearestSensor);
         System.out.println("Nearest Sensor Lat: " + nearestSensor.getCoordinates().getLatitude());
         System.out.println("Nearest Sensor Lng: " + nearestSensor.getCoordinates().getLongitude());
-        // Add sensor to list of visited nodes
-        visitedSensorList.add(nearestSensor);
         
         // while the drone still has moves left ...
         // while we haven't visited all nodes ... 
@@ -100,12 +98,12 @@ public class App
                     
                     // loop through all edges in path
                     System.out.println("Loop through all edges in path");
-                    for (int j = 0; j < directRoute.size() - 1; j++) {
+                    for (int j = 0; j < path.size() - 1; j++) {
                         // Consider an i and a j node
                         System.out.println("I: " + j);
-                        Point temporaryNodeI = directRoute.get(j);
+                        Point temporaryNodeI = path.get(j);
                         System.out.println("temp I: " + temporaryNodeI.longitude() + " " + temporaryNodeI.latitude());
-                        Point temporaryNodeJ = directRoute.get(j+1);
+                        Point temporaryNodeJ = path.get(j+1);
                         System.out.println("temp J: " + temporaryNodeJ.longitude() + " " + temporaryNodeJ.latitude());
                         double distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
                         double distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
@@ -127,12 +125,12 @@ public class App
                     
                     // Insert the sensor into the path between nodes I and J
                     // Loop through directRoute to find where to insert
-                    for (int j = 0; j < directRoute.size(); j++) {
+                    for (int j = 0; j < path.size(); j++) {
                         // when you find nodeI
-                        Point node = directRoute.get(j);
+                        Point node = path.get(j);
                         
                         if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
-                            directRoute.add(j+1, nodeN);
+                            path.add(j+1, nodeN);
                             System.out.println("Point added! ");
                         }
                     }
@@ -144,7 +142,7 @@ public class App
         }
         
         // Back to start
-        directRoute.add(startPoint);
+        path.add(startPoint);
         
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
@@ -157,7 +155,7 @@ public class App
         startFeature.addStringProperty("marker-symbol", "lighthouse");
         markerFeatures.add(startFeature);
         // CHECKING -- PRINTING ALL PATH SO FAR
-        var pathLine = LineString.fromLngLats(directRoute);
+        var pathLine = LineString.fromLngLats(path);
         var pathGeometry = (Geometry) pathLine;
         var pathFeature = Feature.fromGeometry(pathGeometry);
         markerFeatures.add(pathFeature);
@@ -211,16 +209,14 @@ public class App
         
         // Loop through the sensors not yet visited and find the closest to the currentNode
         for (Sensor sensor : sensorList) {
-            // Calculate the distance between the sensor and the start point
-            Point sensorPoint = Point.fromLngLat(sensor.getCoordinates().getLongitude(), sensor.getCoordinates().getLatitude());
+            Point sensorPoint = Point.fromLngLat(sensor.getCoordinates().getLongitude(), 
+                        sensor.getCoordinates().getLatitude());
             var distance = getEuclideanDistance(currentNode, sensorPoint);
             if (counter == 0) {
                 shortestDistance = distance;
             }
-            if ( distance < shortestDistance) {
-                // update distance
+            if (distance < shortestDistance) {
                 shortestDistance = distance;
-                // set nextNode
                 nextNode = sensor;
             }
             counter++;
@@ -271,5 +267,14 @@ public class App
         return features;
     }
    
-    
+    /*
+     * Check if a given point is in the confinement zone
+     */
+    public boolean isInConfinementZone(Point point) {
+        boolean permittedLatitude;
+        boolean permittedLongitude;
+        permittedLatitude = 55.942617 < point.longitude() && point.latitude() < 55.946233;
+        permittedLongitude = -3.192473 < point.longitude() && point.longitude() < -3.184319;
+        return (permittedLatitude && permittedLongitude);
+    }
 }
