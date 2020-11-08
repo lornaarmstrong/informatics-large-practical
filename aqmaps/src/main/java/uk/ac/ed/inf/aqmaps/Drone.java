@@ -44,6 +44,18 @@ public class Drone {
         // if drone point to sensor point
         return withinRange;
     }
+    
+    /*
+     * Moves the drone
+     */
+    public void movement(int direction) {
+        // Direction is a multiple of ten, telling degrees to travel in
+        this.moves -= 1;
+        Double initialLatitude = this.position.latitude();
+        Double initialLongitude = this.position.longitude();
+        
+        
+    }
 	
 	// TODO methods:
 	// - get distance to sensor

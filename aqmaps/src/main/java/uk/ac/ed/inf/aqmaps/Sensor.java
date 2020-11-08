@@ -5,6 +5,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 
 import com.google.gson.Gson;
+import com.mapbox.geojson.Point;
 
 import java.io.IOException;
 import java.net.URI;
@@ -53,7 +54,7 @@ public class Sensor {
 	/*
 	 *  Find the latitude and longitude for the what3words location, returned as a Coordinate
 	 */
-	public Coordinate getCoordinates() throws IOException, InterruptedException {
+	public Point getPoint() throws IOException, InterruptedException {
 	        // Split the what3words into the 3 separate words
 	        var words = location.split("\\.");
 	    
@@ -67,14 +68,14 @@ public class Sensor {
 	        // Check the response.statusCode()
 	        int statusCode = response.statusCode();
 	        if (statusCode == 200) {
-	            System.out.println("Response recieved correctly.");
+	            //System.out.println("Response recieved correctly.");
 	            // Get the latitude and longitude and make it a Coordinate
 	            var word = new Gson().fromJson(response.body(), Word.class);
 	            // Get the coordinates of the location
 	            var longitude = word.getCoordinates().getLng();
-	            var latitude = word.getCoordinates().getLat();
-	            Coordinate coordinate = new Coordinate(latitude, longitude);
-	            return coordinate;
+                var latitude = word.getCoordinates().getLat();
+	            Point point = Point.fromLngLat(longitude, latitude);
+	            return point;
 	        } else if (statusCode == 404){
 	            // There is an error with the request
 	            System.out.println("The server cannot find the requested resource [error 404]");

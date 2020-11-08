@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
+import com.mapbox.geojson.Point;
+
 public class Word {
 
 	// Matching the words details.json structure from the server

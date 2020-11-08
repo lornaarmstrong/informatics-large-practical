@@ -1,7 +1,9 @@
 package uk.ac.ed.inf.aqmaps;
 
+import com.mapbox.geojson.Point;
+
 public class Square {
 
-	private LngLat southwest;
-	private LngLat northeast;
+	private Point southwest;
+	private Point northeast;
 }

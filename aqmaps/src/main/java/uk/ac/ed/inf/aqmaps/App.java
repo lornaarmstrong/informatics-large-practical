@@ -11,9 +11,7 @@ import com.mapbox.geojson.Point;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -48,39 +46,46 @@ public class App
         // TODO add input validation / checks
         
         // Get the list of sensors and no-fly zones
-        sensorList = getSensorList(day, month, year);
-        noFlyZones = getNoFlyZoneList();    
+        List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
+        sensorList = sensorsForTheDay.subList(0, 5);
         
         // Create the drone's starting point and drone instance
         var startPoint = Point.fromLngLat(startLongitude, startLatitude);
         var drone = new Drone(startPoint);
-        System.out.println("Drone starting location: " + startPoint.longitude() + " " + startPoint.latitude());
-   
+        System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());
+        
+        // DEBUGGING -- Print out the coordinates of the sensors to check
+        int num = 1;
+        System.out.println("Sensors to be checked on this day:  ");
+        for (Sensor sensor : sensorList) {
+            System.out.println("Sensor " + num + "--- " + sensor.getPoint().latitude() + "," + sensor.getPoint().longitude());
+            num++;
+        }
+        noFlyZones = getNoFlyZoneList();    
+        
         // 1. Add start node to the path
         path.add(startPoint);
-        
+       
         // 2. Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
-        var nearestSensorPoint = Point.fromLngLat(nearestSensor.getCoordinates().getLongitude(), 
-                    nearestSensor.getCoordinates().getLatitude());
-        
-        // Move the drone to it
-        
-        // If drone is within the sensor range, take the reading
-        if (drone.withinSensorRange(nearestSensor)) {
-            
-        }
-        
-        // Update path and listed of visited sensors to contain the nearest sensor
+        var nearestSensorPoint = nearestSensor.getPoint();
         path.add(nearestSensorPoint);
         visitedSensorList.add(nearestSensor);
-        System.out.println("Nearest Sensor Lat: " + nearestSensor.getCoordinates().getLatitude());
-        System.out.println("Nearest Sensor Lng: " + nearestSensor.getCoordinates().getLongitude());
+        System.out.println("Nearest Sensor Lat: " + nearestSensorPoint.latitude());
+        System.out.println("Nearest Sensor Lng: " + nearestSensorPoint.longitude() + "\n");
+        
+//        // Move the drone to it
+//        
+//        // If drone is within the sensor range, take the reading
+//        if (drone.withinSensorRange(nearestSensor)) {
+//            
+//        }
         
         // while the drone still has moves left ...
         // while we haven't visited all nodes ... 
         while (visitedSensorList.size() < sensorList.size()) {
-            // 3. Select random node (N) that is not yet visited
+            // Find the sensor (not yet visited) that is nearest to a sensor in the visited list
+            // find nearestNode
             int sensorCount = 0;
             for (int i = 0; i < sensorList.size(); i++) {
                 System.out.println("Checking sensors " + sensorCount);
@@ -92,19 +97,19 @@ public class App
                     // distanceIJ = getEuclideanDistance();
                     var minimum = 0.0;
                     int count = 0;
-                    Point nodeN = Point.fromLngLat(sensor.getCoordinates().getLongitude(), sensor.getCoordinates().getLatitude());
+                    Point nodeN = sensor.getPoint();
                     Point nodeI = null;
                     Point nodeJ = null;
                     
                     // loop through all edges in path
-                    System.out.println("Loop through all edges in path");
+                    //System.out.println("Loop through all edges in path");
                     for (int j = 0; j < path.size() - 1; j++) {
                         // Consider an i and a j node
-                        System.out.println("I: " + j);
+                        //System.out.println("I: " + j);
                         Point temporaryNodeI = path.get(j);
-                        System.out.println("temp I: " + temporaryNodeI.longitude() + " " + temporaryNodeI.latitude());
+                        //System.out.println("temp I: " + temporaryNodeI.longitude() + " " + temporaryNodeI.latitude());
                         Point temporaryNodeJ = path.get(j+1);
-                        System.out.println("temp J: " + temporaryNodeJ.longitude() + " " + temporaryNodeJ.latitude());
+                        //System.out.println("temp J: " + temporaryNodeJ.longitude() + " " + temporaryNodeJ.latitude());
                         double distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
                         double distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
                         double distanceNJ = getEuclideanDistance(nodeN, temporaryNodeJ);
@@ -131,7 +136,7 @@ public class App
                         
                         if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
                             path.add(j+1, nodeN);
-                            System.out.println("Point added! ");
+                            //System.out.println("Point added! ");
                         }
                     }
                     
@@ -186,8 +191,7 @@ public class App
         // Create a Feature for every marker in sensor list
         for (Sensor sensor: sensorList) {
             // Create a marker for that coordinate
-            var coords = sensor.getCoordinates();
-            var markerPoint = Point.fromLngLat(coords.getLongitude(), coords.getLatitude());
+            var markerPoint = sensor.getPoint();
             var markerGeometry = (Geometry) markerPoint;
             var markerFeature = Feature.fromGeometry(markerGeometry);
             
@@ -208,9 +212,10 @@ public class App
         var counter = 0;
         
         // Loop through the sensors not yet visited and find the closest to the currentNode
+        System.out.println("Loop through the not-yet-visited sensors");
         for (Sensor sensor : sensorList) {
-            Point sensorPoint = Point.fromLngLat(sensor.getCoordinates().getLongitude(), 
-                        sensor.getCoordinates().getLatitude());
+            //System.out.println("Sensor being checked!");
+            Point sensorPoint = sensor.getPoint();
             var distance = getEuclideanDistance(currentNode, sensorPoint);
             if (counter == 0) {
                 shortestDistance = distance;
