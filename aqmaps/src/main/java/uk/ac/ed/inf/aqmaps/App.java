@@ -51,19 +51,18 @@ public class App
         // Get the list of sensors and no-fly zones
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
         sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked
+        noFlyZones = getNoFlyZoneList();
         
         // Create the drone's starting point and drone instance
         var startPoint = Point.fromLngLat(startLongitude, startLatitude);
         var drone = new Drone(startPoint);
-        System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());
-   
-        noFlyZones = getNoFlyZoneList();    
+        System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());    
         
-        // 1. Add start node to the path and mark as visited point
+        // Add start node to the path and mark as visited point
         path.add(startPoint);
         visitedPointList.add(startPoint);
        
-        // 2. Find nearest node J, move to it, and build the partial tour (I, J)
+        // Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
         var nearestSensorPoint = nearestSensor.getPoint();
         path.add(nearestSensorPoint);
