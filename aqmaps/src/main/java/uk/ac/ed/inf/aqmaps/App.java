@@ -50,7 +50,7 @@ public class App
         
         // Get the list of sensors and no-fly zones
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
-        sensorList = sensorsForTheDay.subList(0, 5);
+        sensorList = sensorsForTheDay.subList(0, 33);
         
         // Create the drone's starting point and drone instance
         var startPoint = Point.fromLngLat(startLongitude, startLatitude);
@@ -58,12 +58,12 @@ public class App
         System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());
         
         // DEBUGGING -- Print out the coordinates of the sensors to check
-        int num = 1;
-        System.out.println("Sensors to be checked on this day:  ");
-        for (Sensor sensor : sensorList) {
-            System.out.println("Sensor " + num + "--- " + sensor.getPoint().latitude() + "," + sensor.getPoint().longitude());
-            num++;
-        }
+//        int num = 1;
+//        System.out.println("Sensors to be checked on this day:  ");
+//        for (Sensor sensor : sensorList) {
+//            System.out.println("Sensor " + num + "--- " + sensor.getPoint().latitude() + "," + sensor.getPoint().longitude());
+//            num++;
+//        }
         noFlyZones = getNoFlyZoneList();    
         
         // 1. Add start node to the path and mark as visited point
@@ -76,10 +76,10 @@ public class App
         var nearestSensorPoint = nearestSensor.getPoint();
         path.add(nearestSensorPoint);
         visitedPointList.add(nearestSensor.getPoint());
-        System.out.println("Nearest Sensor Lat: " + nearestSensorPoint.latitude());
-        System.out.println("Nearest Sensor Lng: " + nearestSensorPoint.longitude() + "\n");
-        
-        System.out.println("Contents of visitedSensorList");
+//        System.out.println("Nearest Sensor Lat: " + nearestSensorPoint.latitude());
+//        System.out.println("Nearest Sensor Lng: " + nearestSensorPoint.longitude() + "\n");
+//        
+//        System.out.println("Contents of visitedSensorList");
         
 //        // Print out all the nodes in visitedPointList
 //        System.out.println("VISITED POINTS:");
@@ -92,7 +92,7 @@ public class App
         while (visitedPointList.size() < sensorList.size() + 1) {
             // Find the sensor (not yet visited) that is nearest to a sensor in the visited list
             Sensor nextSensorToInclude = selectNearestSensor();
-            System.out.println("Inserting into the path the sensor: " + nextSensorToInclude.getPoint().latitude() + ", " + nextSensorToInclude.getPoint().longitude() );
+            //System.out.println("Inserting into the path the sensor: " + nextSensorToInclude.getPoint().latitude() + ", " + nextSensorToInclude.getPoint().longitude() );
             insertIntoPath(nextSensorToInclude);
         }
         
@@ -181,20 +181,20 @@ public class App
         HashMap<Sensor, Double> sensorDistancePair = new HashMap<Sensor, Double>();
         int sensorNumber = 0;
         
-        System.out.println("NOT IN PATH SENSORS");
+        //System.out.println("NOT IN PATH SENSORS");
         List<Sensor> notInPathSensors = new ArrayList<Sensor>();
         // get sensors not yet incuded in path
         for (Sensor sensor: sensorList) {
             if(!(visitedPointList.contains(sensor.getPoint()))) {
                 notInPathSensors.add(sensor);
-                System.out.println(sensor.getPoint().latitude() + ", " + sensor.getPoint().longitude());
+                //System.out.println(sensor.getPoint().latitude() + ", " + sensor.getPoint().longitude());
             }
         }
         
         
         for (Sensor currentSensor: sensorList) {
             if (!visitedPointList.contains(currentSensor.getPoint())) {
-                System.out.println("We found a sensor not yet in the path. Let's calculate shortest distance to another node");
+                //System.out.println("We found a sensor not yet in the path. Let's calculate shortest distance to another node");
                 double shortestDistance = 0.0;
                 double distance = 0.0;
                 sensorNumber++;
@@ -204,7 +204,7 @@ public class App
                     Point pointInPath = visitedPointList.get(i);
                     Point sensorPointNotInPath = currentSensor.getPoint();
                     distance = getEuclideanDistance(pointInPath, sensorPointNotInPath);
-                    System.out.println(distance + " (i = " + i + ")");
+                    //System.out.println(distance + " (i = " + i + ")");
                     if (i == 0) {
                         shortestDistance = distance;
                     } else {
@@ -215,15 +215,15 @@ public class App
                 }
                 // Add the sensor we checked the distances of, and the shortest distance
                 sensorDistancePair.put(currentSensor, shortestDistance);
-                System.out.println("SENSOR " + sensorNumber + " - SHORTEST DISTANCE");
-                System.out.println(currentSensor.getPoint().longitude() + ", " + currentSensor.getPoint().latitude() + " d: " + shortestDistance);
+                //System.out.println("SENSOR " + sensorNumber + " - SHORTEST DISTANCE");
+                //System.out.println(currentSensor.getPoint().longitude() + ", " + currentSensor.getPoint().latitude() + " d: " + shortestDistance);
             }
         }
         
         nextSensorToInclude = Collections.min(sensorDistancePair.entrySet(), Map.Entry.comparingByValue()).getKey();
-        System.out.println("Closest sensor to any remaining node");
-        System.out.println(nextSensorToInclude.getPoint().latitude());
-        System.out.println(nextSensorToInclude.getPoint().longitude());
+        //System.out.println("Closest sensor to any remaining node");
+        //System.out.println(nextSensorToInclude.getPoint().latitude());
+        //System.out.println(nextSensorToInclude.getPoint().longitude());
         return nextSensorToInclude;
     }
 
@@ -265,7 +265,7 @@ public class App
         var counter = 0;
         
         // Loop through the sensors not yet visited and find the closest to the currentNode
-        System.out.println("Loop through the not-yet-visited sensors");
+        //System.out.println("Loop through the not-yet-visited sensors");
         for (Sensor sensor : sensorList) {
             //System.out.println("Sensor being checked!");
             Point sensorPoint = sensor.getPoint();
