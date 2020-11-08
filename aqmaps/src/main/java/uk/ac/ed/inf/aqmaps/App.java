@@ -17,7 +17,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
  * App class for the autonomous drone, collecting sensor readings for air quality.
@@ -27,7 +30,7 @@ public class App
 {
     // Initialise Variables
     public static List<Sensor> sensorList = new ArrayList<Sensor>();
-    public static List<Sensor> visitedSensorList = new ArrayList<>();
+    public static List<Point> visitedPointList = new ArrayList<>();
     public static FeatureCollection noFlyZones;
     public static int portNumber;
     private static Drone drone;
@@ -63,87 +66,34 @@ public class App
         }
         noFlyZones = getNoFlyZoneList();    
         
-        // 1. Add start node to the path
+        // 1. Add start node to the path and mark as visited point
         path.add(startPoint);
+        visitedPointList.add(startPoint);
+        
        
         // 2. Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
         var nearestSensorPoint = nearestSensor.getPoint();
         path.add(nearestSensorPoint);
-        visitedSensorList.add(nearestSensor);
+        visitedPointList.add(nearestSensor.getPoint());
         System.out.println("Nearest Sensor Lat: " + nearestSensorPoint.latitude());
         System.out.println("Nearest Sensor Lng: " + nearestSensorPoint.longitude() + "\n");
         
-//        // Move the drone to it
-//        
-//        // If drone is within the sensor range, take the reading
-//        if (drone.withinSensorRange(nearestSensor)) {
-//            
-//        }
+        System.out.println("Contents of visitedSensorList");
         
-        // while the drone still has moves left ...
-        // while we haven't visited all nodes ... 
-        while (visitedSensorList.size() < sensorList.size()) {
+//        // Print out all the nodes in visitedPointList
+//        System.out.println("VISITED POINTS:");
+//        for (Point point: visitedPointList) {
+//            System.out.println(point.latitude() + " " + point.longitude());
+//        }
+       
+        
+        // Until we have visited every node ...
+        while (visitedPointList.size() < sensorList.size() + 1) {
             // Find the sensor (not yet visited) that is nearest to a sensor in the visited list
-            // find nearestNode
-            int sensorCount = 0;
-            for (int i = 0; i < sensorList.size(); i++) {
-                System.out.println("Checking sensors " + sensorCount);
-                sensorCount++;
-                Sensor sensor = sensorList.get(i);
-                if (!visitedSensorList.contains(sensor)) {
-                    // 4. Choose the edge (i,j) from the current path with the minimum value of:
-                    // distance(i, N) + distance (N, j) - distance(i, j)
-                    // distanceIJ = getEuclideanDistance();
-                    var minimum = 0.0;
-                    int count = 0;
-                    Point nodeN = sensor.getPoint();
-                    Point nodeI = null;
-                    Point nodeJ = null;
-                    
-                    // loop through all edges in path
-                    //System.out.println("Loop through all edges in path");
-                    for (int j = 0; j < path.size() - 1; j++) {
-                        // Consider an i and a j node
-                        //System.out.println("I: " + j);
-                        Point temporaryNodeI = path.get(j);
-                        //System.out.println("temp I: " + temporaryNodeI.longitude() + " " + temporaryNodeI.latitude());
-                        Point temporaryNodeJ = path.get(j+1);
-                        //System.out.println("temp J: " + temporaryNodeJ.longitude() + " " + temporaryNodeJ.latitude());
-                        double distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
-                        double distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
-                        double distanceNJ = getEuclideanDistance(nodeN, temporaryNodeJ);
-                        // calculate d(I,N) + d(N,J) - d(I,J)
-                        double formulaResult = distanceIN + distanceNJ - distanceIJ;
-                        // if this is the first edge considered, we assume minimum
-                        if (count == 0) {
-                            minimum = formulaResult;
-                        }
-                        // if the result of the formula for this edge is less than minimum,
-                        // update the nodeI and nodeJ variables to store the new (i,j) edge
-                        if (formulaResult <= minimum) {
-                            minimum = formulaResult;
-                            nodeI = temporaryNodeI;
-                            nodeJ = temporaryNodeJ;
-                        }
-                    }
-                    
-                    // Insert the sensor into the path between nodes I and J
-                    // Loop through directRoute to find where to insert
-                    for (int j = 0; j < path.size(); j++) {
-                        // when you find nodeI
-                        Point node = path.get(j);
-                        
-                        if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
-                            path.add(j+1, nodeN);
-                            //System.out.println("Point added! ");
-                        }
-                    }
-                    
-                    // add to visited nodes list
-                    visitedSensorList.add(sensor);
-                }
-            }
+            Sensor nextSensorToInclude = selectNearestSensor();
+            System.out.println("Inserting into the path the sensor: " + nextSensorToInclude.getPoint().latitude() + ", " + nextSensorToInclude.getPoint().longitude() );
+            insertIntoPath(nextSensorToInclude);
         }
         
         // Back to start
@@ -174,6 +124,109 @@ public class App
 //        PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
     }
     
+    /*
+     * Inserts sensor N into path such that d(I,
+     */
+    public static void insertIntoPath(Sensor nextSensorToInclude) throws IOException, InterruptedException {
+        var minimum = 0.0;
+        int count = 0;
+        Point nodeN = nextSensorToInclude.getPoint();
+        Point nodeI = null;
+        Point nodeJ = null;
+        
+        for (int i = 0; i < path.size() - 1; i ++) {
+            // Consider a node I and J
+            Point temporaryNodeI = path.get(i);
+            Point temporaryNodeJ = path.get(i + 1);
+            double distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
+            double distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
+            double distanceNJ = getEuclideanDistance(nodeN, temporaryNodeJ);
+            // calculate d(I,N) + d(N,J) - d(I,J)
+            double formulaResult = distanceIN + distanceNJ - distanceIJ;
+            if (count == 0) {
+                minimum = formulaResult;
+            }
+            // if the result of the formula for this edge is less than minimum,
+            // update the nodeI and nodeJ variables to store the new (i,j) edge
+            if (formulaResult <= minimum) {
+                minimum = formulaResult;
+                nodeI = temporaryNodeI;
+                nodeJ = temporaryNodeJ;
+            }
+        }
+        
+        // Insert the sensor into the path between nodes I and J
+        // Loop through directRoute to find where to insert
+        for (int j = 0; j < path.size(); j++) {
+            // when you find nodeI
+            Point node = path.get(j);
+          
+            if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
+                path.add(j+1, nodeN);
+            }
+        }
+      
+      // add to visited nodes list
+      visitedPointList.add(nextSensorToInclude.getPoint());
+    }
+    
+    /*
+     * Find the sensor that is closest to any sensor currently in visitedSensorList
+     */
+    public static Sensor selectNearestSensor() throws IOException, InterruptedException {
+        Sensor nextSensorToInclude = null;
+        
+        // Create a hashmap to store the shortest distance from each sensor (not in path)
+        // to a sensor in the path (the sensor in particular doesn't matter)
+        HashMap<Sensor, Double> sensorDistancePair = new HashMap<Sensor, Double>();
+        int sensorNumber = 0;
+        
+        System.out.println("NOT IN PATH SENSORS");
+        List<Sensor> notInPathSensors = new ArrayList<Sensor>();
+        // get sensors not yet incuded in path
+        for (Sensor sensor: sensorList) {
+            if(!(visitedPointList.contains(sensor.getPoint()))) {
+                notInPathSensors.add(sensor);
+                System.out.println(sensor.getPoint().latitude() + ", " + sensor.getPoint().longitude());
+            }
+        }
+        
+        
+        for (Sensor currentSensor: sensorList) {
+            if (!visitedPointList.contains(currentSensor.getPoint())) {
+                System.out.println("We found a sensor not yet in the path. Let's calculate shortest distance to another node");
+                double shortestDistance = 0.0;
+                double distance = 0.0;
+                sensorNumber++;
+                // calculate distance to each node in path and save the shortest
+                for (int i = 0; i < visitedPointList.size(); i++) {
+                    //System.out.println(visitedPointList.size());
+                    Point pointInPath = visitedPointList.get(i);
+                    Point sensorPointNotInPath = currentSensor.getPoint();
+                    distance = getEuclideanDistance(pointInPath, sensorPointNotInPath);
+                    System.out.println(distance + " (i = " + i + ")");
+                    if (i == 0) {
+                        shortestDistance = distance;
+                    } else {
+                       if (distance < shortestDistance) {
+                           shortestDistance = distance;
+                       }
+                    } 
+                }
+                // Add the sensor we checked the distances of, and the shortest distance
+                sensorDistancePair.put(currentSensor, shortestDistance);
+                System.out.println("SENSOR " + sensorNumber + " - SHORTEST DISTANCE");
+                System.out.println(currentSensor.getPoint().longitude() + ", " + currentSensor.getPoint().latitude() + " d: " + shortestDistance);
+            }
+        }
+        
+        nextSensorToInclude = Collections.min(sensorDistancePair.entrySet(), Map.Entry.comparingByValue()).getKey();
+        System.out.println("Closest sensor to any remaining node");
+        System.out.println(nextSensorToInclude.getPoint().latitude());
+        System.out.println(nextSensorToInclude.getPoint().longitude());
+        return nextSensorToInclude;
+    }
+
     public static void writeFile(String filename, String json) throws IOException {
         System.out.println("Writing to file!");
         BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
