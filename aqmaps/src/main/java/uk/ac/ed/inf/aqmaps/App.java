@@ -17,6 +17,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ public class App
     public static Drone drone;
     public static List<Point> path = new ArrayList<Point>();
     public static List<Point> destinations = new ArrayList<Point>();
+    public static double[][] distanceMatrix = new double [6][6];
     
     public static void main( String[] args ) throws IOException, InterruptedException {
         // Get the input 
@@ -52,7 +54,7 @@ public class App
         
         // Get the list of sensors and no-fly zones
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
-        sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked
+        sensorList = sensorsForTheDay.subList(0, 6); // to ensure only 33 sensors are checked
         noFlyZones = getNoFlyZoneList();
         
         // Create the drone's starting point and drone instance
@@ -60,6 +62,14 @@ public class App
         drone = new Drone(startPoint);
         path.add(drone.startPoint);
         System.out.println("Drone start: " + drone.startPoint.longitude() + " " + drone.startPoint.latitude());
+
+        // Fill out the distance matrix, calculating the distances between all nodes
+        calculateDistanceMatrix();
+        // Print distance matrix
+        for (int i = 0; i < distanceMatrix.length; i++) {
+            System.out.println(Arrays.toString(distanceMatrix[i]));
+        }
+        
        
         // Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
@@ -100,6 +110,33 @@ public class App
 //        PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
     }
     
+    public static void calculateDistanceMatrix() throws IOException, InterruptedException {
+        // Fills a 34 x 34 grid with the distances to all other nodes
+        for (int i = 0; i < distanceMatrix.length; i++) {
+            for (int j = 0; j < distanceMatrix.length; j++) {
+                if (i == j) {
+                    distanceMatrix[i][j] = 100;
+                } else {
+                    if (i == 0) {
+                        var destination = sensorList.get(j - 1).getPoint();
+                        var point = drone.startPoint;
+                        distanceMatrix[i][j] = getEuclideanDistance(point, destination);
+                    } else {
+                        if (j == 0) {
+                            var destination = drone.startPoint;
+                            var point = sensorList.get(i - 1).getPoint();
+                            distanceMatrix[i][j] = getEuclideanDistance(point, destination);
+                        } else {
+                            var point = sensorList.get(i - 1).getPoint();
+                            var destination = sensorList.get(j - 1).getPoint();
+                            distanceMatrix[i][j] = getEuclideanDistance(point, destination);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /*
      * Inserts sensor N into sensorsInOrder such that d(I,N) + d(N,J) - d(I,J) is minimised and I and J are sensors
      * already in the sensorsInOrder list
@@ -167,9 +204,6 @@ public class App
             for (int j = 0; j < sensorsInOrder.size(); j++) {
                 // when you find sensor node I, add the new sensor node into the next index of sensorsInOrder
                 var node = sensorsInOrder.get(j).getPoint();
-                System.out.println("Node lat: " + node.latitude() + "NodeI lat:" + nodeI.latitude());
-                System.out.println("Node lng: " + node.longitude() + "NodeI lng:" + nodeI.longitude());
-                System.out.println(node.latitude() == nodeI.latitude());
                 double nodeLatitude = node.latitude();
                 double nodeILatitude = nodeI.latitude();
                 System.out.println(nodeLatitude == nodeILatitude);
@@ -283,6 +317,8 @@ public class App
     /*
      * Get the list of all sensors to be visited on the given date (from input) 
      */
+    
+    
     public static List<Sensor> getSensorList(String day, String month, String year) 
             throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
