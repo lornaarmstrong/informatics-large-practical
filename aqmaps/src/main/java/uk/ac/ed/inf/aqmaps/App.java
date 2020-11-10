@@ -31,10 +31,10 @@ public class App
     // Initialise Variables
     public static List<Sensor> sensorList = new ArrayList<Sensor>();
     public static List<Point> visitedPointList = new ArrayList<>();
-    public static List<Sensor> sensorsOrder = new ArrayList<Sensor>();
+    public static List<Sensor> sensorsInOrder = new ArrayList<Sensor>();
     public static FeatureCollection noFlyZones;
     public static int portNumber;
-    private static Drone drone;
+    public static Drone drone;
     public static List<Point> path = new ArrayList<Point>();
     public static List<Point> destinations = new ArrayList<Point>();
     
@@ -57,21 +57,24 @@ public class App
         
         // Create the drone's starting point and drone instance
         var startPoint = Point.fromLngLat(startLongitude, startLatitude);
-        var drone = new Drone(startPoint);
-        System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());    
+        drone = new Drone(startPoint);
+        System.out.println("Drone start: " + drone.startPoint.longitude() + " " + drone.startPoint.latitude());    
         
-        path.add(startPoint);
-        visitedPointList.add(startPoint);
+        path.add(drone.startPoint);
+        //visitedPointList.add(startPoint);
        
         // Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
-        var nearestSensorPoint = nearestSensor.getPoint();
-        path.add(nearestSensorPoint);
-        visitedPointList.add(nearestSensor.getPoint());
+        //var nearestSensorPoint = nearestSensor.getPoint();
+        //path.add(nearestSensorPoint);
+        //visitedPointList.add(nearestSensor.getPoint());
+        sensorsInOrder.add(nearestSensor);
        
-        while (visitedPointList.size() < sensorList.size() + 1) {
+        System.out.println("Loop through all sensors and add them to the sensorsInOrder list");
+        while (sensorsInOrder.size() < sensorList.size()) {
+            System.out.println(sensorsInOrder.size());
             var nextSensorToInclude = selectNearestSensor();
-            insertIntoPath(nextSensorToInclude);
+            insertIntoOrder(nextSensorToInclude);
         }
         
         // Add edge to return to start location
@@ -103,53 +106,89 @@ public class App
     }
     
     /*
-     * Inserts sensor N into path such that d(I,N) + d(N,J) - d(I,J) is minimised and I and J are sensors
-     * already in the path
+     * Inserts sensor N into sensorsInOrder such that d(I,N) + d(N,J) - d(I,J) is minimised and I and J are sensors
+     * already in the sensorsInOrder list
      */
-    public static void insertIntoPath(Sensor nextSensorToInclude) throws IOException, InterruptedException {
+    public static void insertIntoOrder(Sensor nextSensorToInclude) throws IOException, InterruptedException {
         var minimum = 0.0;
-        int count = 0;
+        //int count = 0;
         var nodeN = nextSensorToInclude.getPoint();
         Point nodeI = null;
         Point nodeJ = null;
         
-        for (int i = 0; i < path.size() - 1; i ++) {
-            // Consider a node I and J from the path
-            var temporaryNodeI = path.get(i);
-            var temporaryNodeJ = path.get(i + 1);
-            var distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
-            var distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
-            var distanceNJ = getEuclideanDistance(nodeN, temporaryNodeJ);
+        System.out.println(sensorsInOrder.size());
+        for (int i = 0; i < sensorsInOrder.size(); i ++) {
+            int count = 0;
+
+            // Consider adjacent points I and J from the sensors in order
+            // We need to consider the start --> sensor1
+            Point temporaryPointI;
+            Point temporaryPointJ;
+            
+            if (i == 0) {
+                System.out.println("Setting temporary nodes to start and sensor1");
+                temporaryPointI = drone.startPoint;
+                temporaryPointJ = sensorsInOrder.get(i).getPoint();
+            }
+            // sensor1 --> sensor2, sensor2 --> sensor3 etc.
+            else {
+                System.out.println("Setting temporary nodes to sensorx and sensory, x = y - 1");
+                temporaryPointI = sensorsInOrder.get(i-1).getPoint();
+                temporaryPointJ = sensorsInOrder.get(i).getPoint();
+            }
+
             // Calculate d(I,N) + d(N,J) - d(I,J)
+            System.out.println("Calculating distance formula for temp nodes I, J and nodeN");
+            var distanceIJ = getEuclideanDistance(temporaryPointI, temporaryPointJ);
+            var distanceIN = getEuclideanDistance(temporaryPointI, nodeN);
+            var distanceNJ = getEuclideanDistance(nodeN, temporaryPointJ);
             var formulaResult = distanceIN + distanceNJ - distanceIJ;
+            System.out.println("Formula result: " + formulaResult);
+            
+            // If this is the first distance we have checked, update the minimum
+            // because it's the only distance so must be the smallest checked yet distance
             if (count == 0) {
                 minimum = formulaResult;
+                nodeI = temporaryPointI;
+                nodeJ = temporaryPointJ;
             }
+            
             // If the result of the formula for this edge is less than minimum,
             // update the nodeI and nodeJ variables to store the new (i,j) edge
-            if (formulaResult <= minimum) {
+            else if (formulaResult <= minimum) {
                 minimum = formulaResult;
-                nodeI = temporaryNodeI;
-                nodeJ = temporaryNodeJ;
+                nodeI = temporaryPointI;
+                nodeJ = temporaryPointJ;
             }
+            count++;
         }
         
-        // Insert the sensor into the path between nodes I and J
-        // Loop through directRoute to find where to insert
-        for (int j = 0; j < path.size(); j++) {
-            // when you find sensor node I, add the new sensor node into the next index of path
-            var node = path.get(j);
-            if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
-                path.add(j+1, nodeN);
+        // Insert the sensor into the sensorsInOrder list between nodes I and J
+        
+        // If nodeI is the start node, we need to insert node into the first position of the sensorsInOrderList
+        if (nodeI.latitude() == drone.startPoint.latitude() && nodeI.longitude() == drone.startPoint.longitude()) {
+            sensorsInOrder.add(0, nextSensorToInclude);
+        } else {
+            for (int j = 0; j < sensorsInOrder.size(); j++) {
+                // when you find sensor node I, add the new sensor node into the next index of sensorsInOrder
+                var node = sensorsInOrder.get(j).getPoint();
+                System.out.println("Node lat: " + node.latitude() + "NodeI lat:" + nodeI.latitude());
+                System.out.println("Node lng: " + node.longitude() + "NodeI lng:" + nodeI.longitude());
+                System.out.println(node.latitude() == nodeI.latitude());
+                double nodeLatitude = node.latitude();
+                double nodeILatitude = nodeI.latitude();
+                System.out.println(nodeLatitude == nodeILatitude);
+                if (node.latitude() == nodeI.latitude() && node.longitude() == nodeI.longitude()) {
+                    sensorsInOrder.add(j+1, nextSensorToInclude);
+                    break;
+                }
             }
         }
-      
-      // Add the new node into the visitedPointList
-      visitedPointList.add(nextSensorToInclude.getPoint());
     }
     
     /*
-     * Find the sensor that is closest to any sensor currently in visitedSensorList
+     * Find the sensor that is closest to any sensor that is already in the sensorsInOrder list (has already been added)
+     * or to the start
      */
     public static Sensor selectNearestSensor() throws IOException, InterruptedException {
         Sensor nextSensorToInclude = null;
@@ -159,14 +198,15 @@ public class App
         var sensorDistancePair = new HashMap<Sensor, Double>();
         
         for (Sensor currentSensor: sensorList) {
-            if (!visitedPointList.contains(currentSensor.getPoint())) {
+            if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
                 var distance = 0.0;
-                // Calculate distance to each sensor in path and save the shortest
-                for (int i = 0; i < visitedPointList.size(); i++) {
-                    var pointInPath = visitedPointList.get(i);
-                    var sensorPointNotInPath = currentSensor.getPoint();
-                    distance = getEuclideanDistance(pointInPath, sensorPointNotInPath);
+                var sensorPointNotAdded = currentSensor.getPoint();
+                // Calculate distance to each sensor in sensorsInOrder and save the shortest
+                for (int i = 0; i < sensorsInOrder.size(); i++) {
+                    Sensor sensorAdded = sensorsInOrder.get(i);
+                    var pointAdded = sensorAdded.getPoint();
+                    distance = getEuclideanDistance(pointAdded, sensorPointNotAdded);
                     if (i == 0) {
                         shortestDistance = distance;
                     } else {
@@ -175,11 +215,18 @@ public class App
                        }
                     } 
                 }
+                // Check distance to start and save if shorter than shortestDistance
+                distance = getEuclideanDistance(drone.startPoint, sensorPointNotAdded);
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                }
+                System.out.println("Sensor: " + currentSensor.getPoint().latitude() + ", " + currentSensor.getPoint().longitude() + " has shortest distance: " + shortestDistance);
                 sensorDistancePair.put(currentSensor, shortestDistance);
             }
         }
         // Get the sensor for which the minimum distance is the minimum of all sensors
         nextSensorToInclude = Collections.min(sensorDistancePair.entrySet(), Map.Entry.comparingByValue()).getKey();
+        System.out.println("Next sensor to add into the path: " + nextSensorToInclude.getPoint().latitude() + ", " + nextSensorToInclude.getPoint().longitude());
         return nextSensorToInclude;
     }
 
@@ -203,16 +250,15 @@ public class App
         return markerFeatures;
     }
 
+    /*
+     * Loops through all sensors and finds the sensor closest to passed-in point
+     */
     public static Sensor findNearestNode(Point currentNode) throws IOException, InterruptedException {
-        // Check through whole list of not yet added coordinates
         var shortestDistance = 0.0;
         Sensor nextNode = null; // default to null
         var counter = 0;
         
-        // Loop through the sensors not yet visited and find the closest to the currentNode
-        //System.out.println("Loop through the not-yet-visited sensors");
         for (Sensor sensor : sensorList) {
-            //System.out.println("Sensor being checked!");
             Point sensorPoint = sensor.getPoint();
             var distance = getEuclideanDistance(currentNode, sensorPoint);
             if (counter == 0) {
