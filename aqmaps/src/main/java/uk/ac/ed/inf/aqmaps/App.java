@@ -58,6 +58,7 @@ public class App
         var drone = new Drone(startPoint);
         System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());    
         
+        // Move the drone towards the first node
         // Add start node to the path and mark as visited point
         path.add(startPoint);
         visitedPointList.add(startPoint);

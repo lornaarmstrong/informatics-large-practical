@@ -85,6 +85,17 @@ public class Drone {
         return (direction * Math.PI / 180);
     }
     
+    /*
+     * Check if a given point is in the confinement zone
+     */
+    public boolean isInConfinementZone(Point point) {
+        boolean permittedLatitude;
+        boolean permittedLongitude;
+        permittedLatitude = 55.942617 < point.longitude() && point.latitude() < 55.946233;
+        permittedLongitude = -3.192473 < point.longitude() && point.longitude() < -3.184319;
+        return (permittedLatitude && permittedLongitude);
+    }
+    
     
 	
 	// TODO methods:
