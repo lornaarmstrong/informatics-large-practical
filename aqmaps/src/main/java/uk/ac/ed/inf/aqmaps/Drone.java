@@ -13,10 +13,12 @@ public class Drone {
 	
 	private Point position;
 	private int moves;
+	public Point startPoint;
 	
 	// Constructor for Drone
 	public Drone(Point position) {
 		this.position = position;
+		this.startPoint = position;
 		this.moves = 150;
 	}
 	
