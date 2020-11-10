@@ -57,7 +57,7 @@ public class Drone {
     }
     
     /*
-     * Moves the drone, updates its position and adds coordinate to path
+     * Moves the drone, updates its position and adds the new coordinates to path
      */
     public void moveDrone(int direction) {
         // Direction is a multiple of ten, telling degrees to travel in
@@ -65,18 +65,22 @@ public class Drone {
         Double initialLatitude = this.position.latitude();
         Double initialLongitude = this.position.longitude();
         
-        //convert radians to degrees
+        // Convert radians to degrees
         double radians = convertToRadians(direction);
         
-        // Use trig to calculate the longitude and latitude values
+        // Use trigonometry to calculate the longitude and latitude values
         Double xValue = 0.0003 * Math.cos(radians);
         Double yValue = 0.0003 * Math.sin(radians);
         
+        // Update the drone's position
         Double newLatitude = initialLatitude + yValue;
         Double newLongitude = initialLongitude + xValue;
         position = Point.fromLngLat(newLongitude, newLatitude);
     }
 
+    /*
+     * Converts from degrees to radians
+     */
     public double convertToRadians(int direction) {
         return (direction * Math.PI / 180);
     }
