@@ -58,16 +58,11 @@ public class App
         // Create the drone's starting point and drone instance
         var startPoint = Point.fromLngLat(startLongitude, startLatitude);
         drone = new Drone(startPoint);
-        System.out.println("Drone start: " + drone.startPoint.longitude() + " " + drone.startPoint.latitude());    
-        
         path.add(drone.startPoint);
-        //visitedPointList.add(startPoint);
+        System.out.println("Drone start: " + drone.startPoint.longitude() + " " + drone.startPoint.latitude());
        
         // Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestNode(startPoint);
-        //var nearestSensorPoint = nearestSensor.getPoint();
-        //path.add(nearestSensorPoint);
-        //visitedPointList.add(nearestSensor.getPoint());
         sensorsInOrder.add(nearestSensor);
        
         System.out.println("Loop through all sensors and add them to the sensorsInOrder list");
