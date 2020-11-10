@@ -31,10 +31,12 @@ public class App
     // Initialise Variables
     public static List<Sensor> sensorList = new ArrayList<Sensor>();
     public static List<Point> visitedPointList = new ArrayList<>();
+    public static List<Sensor> sensorsOrder = new ArrayList<Sensor>();
     public static FeatureCollection noFlyZones;
     public static int portNumber;
     private static Drone drone;
     public static List<Point> path = new ArrayList<Point>();
+    public static List<Point> destinations = new ArrayList<Point>();
     
     public static void main( String[] args ) throws IOException, InterruptedException {
         // Get the input 
@@ -58,8 +60,6 @@ public class App
         var drone = new Drone(startPoint);
         System.out.println("Drone start: " + startPoint.longitude() + " " + startPoint.latitude());    
         
-        // Move the drone towards the first node
-        // Add start node to the path and mark as visited point
         path.add(startPoint);
         visitedPointList.add(startPoint);
        
