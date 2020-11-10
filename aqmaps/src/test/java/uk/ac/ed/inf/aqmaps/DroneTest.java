@@ -32,34 +32,55 @@ public class DroneTest {
     }
     
     /*
-     * When given a direction (angle, multiple of 10), the current position of drone
-     * should be updated using trigonometry
+     * When given a direction of east, the current position of drone
+     * should update as the drone moves horizontally East by 0.0003
      */
     @Test
     public void moveDroneEast() 
     {
-        // angle is 0
-        assertTrue(false);
+        Point before = drone1.getPosition();
+        drone1.moveDrone(0);
+        assertTrue(drone1.getPosition().latitude() == before.latitude()
+                && drone1.getPosition().longitude() == before.longitude() + 0.0003);
     }
     
+    /*
+     * When given a direction of north, the current position of drone
+     * should update as the drone moves vertically north by 0.0003
+     */
     @Test
     public void moveDroneNorth() 
     {
         // angle is 90
-        assertTrue(false);
+        Point before = drone1.getPosition();
+        drone1.moveDrone(90);
+        assertTrue(drone1.getPosition().latitude() == before.latitude() + 0.0003
+                && drone1.getPosition().longitude() == before.longitude());
     }
     
-//    @Test
-//    public void moveDroneWest() 
-//    {
-//        // angle is 180
-//        //assertTrue(drone1.moveDrone(180));
-//    }
+    /*
+     * When given a direction of west, the current position of drone
+     * should update as the drone moves horizontally west by 0.0003
+     */
+    @Test
+    public void moveDroneWest() 
+    {
+        Point before = drone1.getPosition();
+        drone1.moveDrone(180);
+        assertTrue(drone1.getPosition().latitude() == before.latitude()
+                && drone1.getPosition().longitude() == before.longitude() - 0.0003);
+    }
     
+    /*
+     * When given a direction of south, the current position of drone
+     * should update as the drone moves vertically south by 0.0003
+     */
     @Test
     public void moveDroneSouth() 
     {
-        // angle is 
-        assertTrue(false);
+        Point before = drone1.getPosition();
+        drone1.moveDrone(270);
+        assertTrue(drone1.getPosition().latitude() == before.latitude() - 0.0003
+                && drone1.getPosition().longitude() == before.longitude());
     }
 }
