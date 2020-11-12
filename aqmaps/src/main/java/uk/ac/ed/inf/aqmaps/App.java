@@ -92,13 +92,14 @@ public class App
         
         path.add(startPoint);
         
-        // Print out the expected route
+        // The 'expected' route (calculated using Nearest Insertion)
         idealRoute.add(startPoint);
         for (int i = 0; i < sensorsInOrder.size(); i++) {
             //System.out.println("Adding sensor number " + i + " to path");
             Point sensorCoordinate = Point.fromLngLat(sensorsInOrder.get(i).getCoordinate().longitude, sensorsInOrder.get(i).getCoordinate().latitude);
             idealRoute.add(sensorCoordinate);
         }
+        idealRoute.add(startPoint);
         
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
