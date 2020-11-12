@@ -81,7 +81,7 @@ public class App
         System.out.println("Loop through all sensors and add them to the sensorsInOrder list");
         System.out.println("-----------------------------");
         while (sensorsInOrder.size() < sensorList.size()) {
-            System.out.println("Number of sensors already in order: " + sensorsInOrder.size());
+//            System.out.println("Number of sensors already in order: " + sensorsInOrder.size());
             var nextSensorToInclude = selectNearestSensor();
             insertIntoOrder(nextSensorToInclude);
         }
@@ -113,10 +113,10 @@ public class App
         startFeature.addStringProperty("marker-symbol", "lighthouse");
         markerFeatures.add(startFeature);
         // CHECKING -- PRINTING ALL PATH SO FAR
-        var pathLine = LineString.fromLngLats(idealRoute);
-        var pathGeometry = (Geometry) pathLine;
-        var pathFeature = Feature.fromGeometry(pathGeometry);
-        markerFeatures.add(pathFeature);
+//        var pathLine = LineString.fromLngLats(idealRoute);
+//        var pathGeometry = (Geometry) pathLine;
+//        var pathFeature = Feature.fromGeometry(pathGeometry);
+//        markerFeatures.add(pathFeature);
         // CHECKING -- PRINTING LINESTRING FOR THE DRONE
         var pathLineDrone = LineString.fromLngLats(drone.route);
         var pathLineDroneGeometry = (Geometry) pathLineDrone;
