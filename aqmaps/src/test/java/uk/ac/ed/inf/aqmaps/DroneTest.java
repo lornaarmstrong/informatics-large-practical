@@ -10,8 +10,8 @@ import com.mapbox.geojson.Point;
 
 public class DroneTest {
 
-    Point point1 = Point.fromLngLat(-3.1878, 55.94444);
-    Drone drone1 = new Drone(point1);
+    Coordinate coord1 = new Coordinate (55.94444, -3.1878);
+    Drone drone1 = new Drone(coord1);
     
     /*
      * When given a degree, should convert to radians
@@ -36,12 +36,12 @@ public class DroneTest {
      * should update as the drone moves horizontally East by 0.0003
      */
     @Test
-    public void moveDroneEast() 
+    public void moveDroneEast() throws IOException, InterruptedException 
     {
-        Point before = drone1.getPosition();
+        Coordinate before = drone1.getPosition();
         drone1.moveDrone(0);
-        assertTrue(drone1.getPosition().latitude() == before.latitude()
-                && drone1.getPosition().longitude() == before.longitude() + 0.0003);
+        assertTrue(drone1.getPosition().latitude == before.latitude
+                && drone1.getPosition().longitude == before.longitude + 0.0003);
     }
     
     /*
@@ -49,13 +49,13 @@ public class DroneTest {
      * should update as the drone moves vertically north by 0.0003
      */
     @Test
-    public void moveDroneNorth() 
+    public void moveDroneNorth() throws IOException, InterruptedException 
     {
         // angle is 90
-        Point before = drone1.getPosition();
+        Coordinate before = drone1.getPosition();
         drone1.moveDrone(90);
-        assertTrue(drone1.getPosition().latitude() == before.latitude() + 0.0003
-                && drone1.getPosition().longitude() == before.longitude());
+        assertTrue(drone1.getPosition().latitude == before.latitude + 0.0003
+                && drone1.getPosition().longitude == before.longitude);
     }
     
     /*
@@ -63,12 +63,12 @@ public class DroneTest {
      * should update as the drone moves horizontally west by 0.0003
      */
     @Test
-    public void moveDroneWest() 
+    public void moveDroneWest() throws IOException, InterruptedException 
     {
-        Point before = drone1.getPosition();
+        Coordinate before = drone1.getPosition();
         drone1.moveDrone(180);
-        assertTrue(drone1.getPosition().latitude() == before.latitude()
-                && drone1.getPosition().longitude() == before.longitude() - 0.0003);
+        assertTrue(drone1.getPosition().latitude == before.latitude
+                && drone1.getPosition().longitude == before.longitude - 0.0003);
     }
     
     /*
@@ -76,11 +76,11 @@ public class DroneTest {
      * should update as the drone moves vertically south by 0.0003
      */
     @Test
-    public void moveDroneSouth() 
+    public void moveDroneSouth() throws IOException, InterruptedException 
     {
-        Point before = drone1.getPosition();
+        Coordinate before = drone1.getPosition();
         drone1.moveDrone(270);
-        assertTrue(drone1.getPosition().latitude() == before.latitude() - 0.0003
-                && drone1.getPosition().longitude() == before.longitude());
+        assertTrue(drone1.getPosition().latitude == before.latitude - 0.0003
+                && drone1.getPosition().longitude == before.longitude);
     }
 }

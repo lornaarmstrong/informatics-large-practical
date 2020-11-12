@@ -6,8 +6,8 @@ package uk.ac.ed.inf.aqmaps;
  */
 public class Coordinate {
 	
-	private double latitude;
-	private double longitude;
+	public double latitude;
+	public double longitude;
 	
 	// Constructor for Coordinate
 	public Coordinate(double latitude, double longitude) {
@@ -51,6 +51,14 @@ public class Coordinate {
 		
 		return (permittedLatitude && permittedLongitude);
 	}
+
+	/*
+	 * Gets the next coordinate based on the direction and distance
+	 */
+    public Coordinate getNextPosition(int direction, double distance) {
+        
+        return null;
+    }
 	
 	// TODO method:
 	// - add if in disallowed building area...

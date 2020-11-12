@@ -23,10 +23,12 @@ public class SensorTest
 	 * the point object containing the corresponding latitude and longitude.
 	 */
     @Test
-    public void testGetPoint() throws IOException, InterruptedException
+    public void testGetCoordinate() throws IOException, InterruptedException
     {
-        Point point1 = Point.fromLngLat(-3.185236, 55.944575);
-        assertTrue(sensor1.getPoint().equals(point1));
+        Coordinate point1 = new Coordinate(55.944575, -3.185236);
+        System.out.println(sensor1.getCoordinate().latitude);
+        System.out.println(sensor1.getCoordinate().longitude);
+        assertTrue(sensor1.getCoordinate().equals(point1));
     }
     
     /*
@@ -34,9 +36,9 @@ public class SensorTest
 	 * null
 	 */
     @Test
-    public void testNoPoints() throws IOException, InterruptedException
+    public void testNoCoordinates() throws IOException, InterruptedException
     {
-        assertTrue(sensor2.getPoint() == null);
+        assertTrue(sensor2.getCoordinate() == null);
     }
     
     // TODO further tests
