@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mapbox.geojson.Point;
+
 /**
  * The Drone class represents a Drone, with a position and number of 
  * moves as attributes.
@@ -15,7 +17,7 @@ public class Drone {
 	public int moves;
 	public Coordinate startPosition;
 	public double moveLength = 0.0003;
-	private ArrayList<Coordinate> route = new ArrayList<Coordinate>();
+	public ArrayList<Point> route = new ArrayList<Point>();
 	private ArrayList<Sensor> sensors = new ArrayList<Sensor>();
 
     public Drone(Coordinate startPosition) {
@@ -68,25 +70,38 @@ public class Drone {
         return distance;
     }
     
+    public void visitSensors() throws IOException, InterruptedException {
+      while (this.moves > 0) {
+          int direction = getDirection();
+          moveDrone(direction);
+          moves = 0;
+      }
+  }
+    
     /*
      * Moves the drone, updates its position and adds the new coordinates to path
      */
     public void moveDrone(int direction) throws IOException, InterruptedException {
-        // Direction is a multiple of ten, telling degrees to travel in
         this.moves -= 1;
+        
+        // CHECKING
+        System.out.println("Number of moves remaining: " + moves);
+        System.out.println("From A: " + currentPosition.toString());
+
         Double initialLatitude = this.currentPosition.latitude;
         Double initialLongitude = this.currentPosition.longitude;
        
         // Move the drone to next position
         this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
-        route.add(this.currentPosition);
+        Point nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
+        route.add(nextPoint);
         
         // Check if this new position is in range of the destination sensor
         if (withinSensorRange(sensors.get(0))) {
            takeReading();
         }
         // Convert radians to degrees
-        double radians = convertToRadians(direction);
+        double radians = Math.toRadians(direction);
         
         // Use trigonometry to calculate the longitude and latitude values
         Double xValue = moveLength * Math.cos(radians);
@@ -96,39 +111,35 @@ public class Drone {
         Double newLatitude = initialLatitude + yValue;
         Double newLongitude = initialLongitude + xValue;
         currentPosition = new Coordinate(newLongitude, newLatitude);
+       
+        System.out.println("To B: " + currentPosition.toString());
     }
 
     private void takeReading() {
         // TODO Auto-generated method stub
         
     }
-
-    /*
-     * Converts from degrees to radians
-     */
-    public double convertToRadians(int direction) {
-        return (direction * Math.PI / 180);
-    }
     
-    /*
-     * Check if a given point is in the confinement zone
-     */
-    public boolean isInConfinementZone(Coordinate coordinate) {
-        boolean permittedLatitude;
-        boolean permittedLongitude;
-        permittedLatitude = 55.942617 < coordinate.latitude && coordinate.latitude < 55.946233;
-        permittedLongitude = -3.192473 < coordinate.longitude && coordinate.longitude < -3.184319;
-        return (permittedLatitude && permittedLongitude);
+    private int getDirection() throws IOException, InterruptedException {
+        // Gets the first sensor in the list left to visit (destination sensor)
+        Sensor destination = sensors.get(0);
+        // calculate the angle of the line needed to get to the sensor
+        double yDistance = destination.getCoordinate().latitude - currentPosition.latitude;
+        double xDistance = destination.getCoordinate().longitude - currentPosition.longitude;
+        double angleRadians = Math.atan(yDistance / xDistance);
+        double angleDegrees = Math.toDegrees(angleRadians);
+        int angleRounded = (int) Math.round((angleDegrees / 10.0) * 10);
+        return angleRounded;
     }
 
-    public void visitSensors() {
-        while (this.moves > 0) {
-            
-        }   
+    /*
+     * Adds the starting point to the route
+     */
+    public void startRoute() {
+        Point startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
+        route.add(startPoint); 
     }
-    
-    
-	
+   
 	// TODO methods:
 	// - get distance to sensor
 	// - check if within range of sensor

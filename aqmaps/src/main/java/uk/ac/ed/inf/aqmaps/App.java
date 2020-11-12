@@ -87,9 +87,10 @@ public class App
         }
         
         drone.setSensors(sensorsInOrder); // give the drone the list of sensors to visit in order
+        drone.startRoute(); // starts the route by adding the start point
         drone.visitSensors();
         
-        
+        // Add back to start
         path.add(startPoint);
         
         // The 'expected' route (calculated using Nearest Insertion)
@@ -116,6 +117,11 @@ public class App
         var pathGeometry = (Geometry) pathLine;
         var pathFeature = Feature.fromGeometry(pathGeometry);
         markerFeatures.add(pathFeature);
+        // CHECKING -- PRINTING LINESTRING FOR THE DRONE
+        var pathLineDrone = LineString.fromLngLats(drone.route);
+        var pathLineDroneGeometry = (Geometry) pathLineDrone;
+        var pathFeatureDrone = Feature.fromGeometry(pathLineDroneGeometry);
+        markerFeatures.add(pathFeatureDrone);
         var allMarkers = FeatureCollection.fromFeatures(markerFeatures);
         writeFile("sensorMap.geojson", allMarkers.toJson());
 //        
@@ -254,7 +260,6 @@ public class App
                 for (int i = 0; i < sensorsInOrder.size(); i++) {
                     Sensor sensorAdded = sensorsInOrder.get(i);
                     var coordinateAdded = sensorAdded.getCoordinate();
-                    //distance = getEuclideanDistance(pointAdded, sensorPointNotAdded);
                     distance = distanceMatrix[sensorList.indexOf(sensorAdded) + 1][ sensorList.indexOf(currentSensor) + 1];
                     if (i == 0) {
                         shortestDistance = distance;

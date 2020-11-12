@@ -13,23 +13,23 @@ public class DroneTest {
     Coordinate coord1 = new Coordinate (55.94444, -3.1878);
     Drone drone1 = new Drone(coord1);
     
-    /*
-     * When given a degree, should convert to radians
-     */
-    @Test
-    public void testDegreeToRadians()
-    {
-        assertTrue(drone1.convertToRadians(90) == Math.PI/2);
-    }
-    
-    /*
-     * When given a degree of 0, should convert to 0 radians
-     */
-    @Test
-    public void testDegreeToRadiansZero()
-    {
-        assertTrue(drone1.convertToRadians(0) == 0);
-    }
+//    /*
+//     * When given a degree, should convert to radians
+//     */
+//    @Test
+//    public void testDegreeToRadians()
+//    {
+//        assertTrue(drone1.convertToRadians(90) == Math.PI/2);
+//    }
+//    
+//    /*
+//     * When given a degree of 0, should convert to 0 radians
+//     */
+//    @Test
+//    public void testDegreeToRadiansZero()
+//    {
+//        assertTrue(drone1.convertToRadians(0) == 0);
+//    }
     
     /*
      * When given a direction of east, the current position of drone

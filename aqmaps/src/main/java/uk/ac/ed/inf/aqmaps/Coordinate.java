@@ -51,13 +51,25 @@ public class Coordinate {
 		
 		return (permittedLatitude && permittedLongitude);
 	}
+	
+	/*
+	 * A useful function that represents the coordinate as a string
+	 */
+	public String toString() {
+	    return ("latitude: " + latitude + "     longitude: "  + longitude);
+	}
 
 	/*
 	 * Gets the next coordinate based on the direction and distance
 	 */
-    public Coordinate getNextPosition(int direction, double distance) {
-        
-        return null;
+    public Coordinate getNextPosition(int direction, double moveLength) {
+        double radians = Math.toRadians(direction);
+        Coordinate updatedPosition;
+        // Use trigonometry to calculate the longitude and latitude values
+        Double xValue = moveLength * Math.cos(radians);
+        Double yValue = moveLength * Math.sin(radians);
+        updatedPosition = new Coordinate(this.latitude + yValue, this.longitude + xValue);
+        return updatedPosition;
     }
 	
 	// TODO method:
