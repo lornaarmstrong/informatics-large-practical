@@ -72,7 +72,7 @@ public class Drone {
     
     public void visitSensors() throws IOException, InterruptedException {
       var count = 0;
-      while (this.moves > 0) {
+      while (this.moves > 0 && sensors.size() > 0) {
           var direction = getDirection();
           
 //          // Print out all sensors
@@ -80,10 +80,10 @@ public class Drone {
 //              System.out.println("Sensor next: " + sensor.getCoordinate().toString());
 //          }
           moveDrone(direction);
-          if (count == 5) {
-              moves = 0;
-          }
-          count++;
+//          if (count == 50) {
+//              moves = 0;
+//          }
+//          count++;
       }
   }
     
@@ -134,17 +134,32 @@ public class Drone {
     private int getDirection() throws IOException, InterruptedException {
         // Gets the first sensor in the list left to visit (destination sensor)
         var destination = sensors.get(0);
+        
         // calculate the angle of the line needed to get to the sensor
         var yDistance = destination.getCoordinate().latitude - currentPosition.latitude;
         var xDistance = destination.getCoordinate().longitude - currentPosition.longitude;
+        
         var angleRadians = Math.atan(yDistance / xDistance);
         var angleDegrees = Math.toDegrees(angleRadians);
-        angleDegrees = (angleDegrees + 360) % 360;
+        double angleFromEast = 0.0;
+        if (xDistance > 0 && yDistance > 0) {
+            // no action needed, already reading from East
+        } else if (xDistance < 0 && yDistance > 0) {
+            angleFromEast = 180 - Math.abs(angleDegrees); // update to read from the East, anticlockwise
+        } else if (xDistance < 0 && yDistance < 0) {
+            angleFromEast = 180 + angleDegrees;
+        } else if (xDistance > 0 && yDistance < 0) {
+            angleFromEast = 360 - (Math.abs(angleDegrees));
+        }
+        
+        //var angleRadians = Math.atan(yDistance / xDistance);
+        //var angleDegrees = Math.toDegrees(angleRadians);
+        //angleDegrees = (angleDegrees + 360) % 360;
         // Round the angle to a multiple of 10 -------------------------------------------------
         int angleRounded;
-        var angleRoundedDown = (int) (angleDegrees - angleDegrees % 10);
-        var angleRoundedUp = (int) ((10 - angleDegrees % 10) + angleDegrees);
-        if ( (angleRoundedUp - angleDegrees) < (angleDegrees - angleRoundedDown)) {
+        var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
+        var angleRoundedUp = (int) ((10 - angleDegrees % 10) + angleFromEast);
+        if ( (angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
             angleRounded = angleRoundedUp;
         } else {
             angleRounded = angleRoundedDown;
@@ -152,7 +167,7 @@ public class Drone {
         // -------------------------------------------------------------------------------------
         System.out.println("Destination: " + sensors.get(0).getCoordinate().toString());
         System.out.println("y distance: " +yDistance + "    x distance: " + xDistance);
-        System.out.println("angle in degrees: " + angleDegrees + "     = " + angleRounded);
+        System.out.println("angle in degrees: " + angleFromEast + "     = " + angleRounded);
         return angleRounded;
     }
 
