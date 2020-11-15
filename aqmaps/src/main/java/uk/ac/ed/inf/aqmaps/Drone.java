@@ -168,7 +168,7 @@ public class Drone {
 	            startLatitude, startLongitude) < 0.0003);
 	}
 	/*
-	 *  Check if drone is within the range of the sensor (<0.0002 degrees)
+	 * Check if drone is within the range of the sensor (<0.0002 degrees)
 	 */
 	public boolean withinSensorRange(Sensor sensor) throws IOException, InterruptedException {
 	    var sensorLatitude = sensor.getCoordinate().latitude;
