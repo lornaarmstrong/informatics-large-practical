@@ -106,27 +106,24 @@ public class Drone {
 	private void takeReading() {
 	    System.out.println("--- reading taken ---");
 	}
-    
-    /*
+	
+	/*
      * 
      */
-    private int getDirection() throws IOException, InterruptedException {
-        // Gets the first sensor in the list left to visit (destination sensor)
-        Sensor destination = new Sensor(null, 0.0, null);
-        double destinationLatitude;
-        double destinationLongitude;
-                
-        if (sensors.size() != 0) {
-            destination = sensors.get(0);
-            destinationLatitude = destination.getCoordinate().latitude;
-            destinationLongitude = destination.getCoordinate().longitude;
-        }
-        else {
-            // There are no sensors left to visit, so the next destination is back to the drone starting position
-            returningToStart = true;
-            destinationLatitude = this.startPosition.latitude;
-            destinationLongitude = this.startPosition.longitude;
-        }
+	private int getDirection() throws IOException, InterruptedException {
+	    // Gets the first sensor in the list left to visit (destination sensor)
+	    double destinationLatitude;
+	    double destinationLongitude;
+	    if (sensors.size() != 0) {
+	        Sensor destination = sensors.get(0);
+	        destinationLatitude = destination.getCoordinate().latitude;
+	        destinationLongitude = destination.getCoordinate().longitude;
+	    } else {
+	        // There are no sensors left to visit, so the next destination is back to the drone starting position
+	        returningToStart = true;
+	        destinationLatitude = this.startPosition.latitude;
+	        destinationLongitude = this.startPosition.longitude;
+	    }
         
         // Calculate the angle of the line needed to get to the sensor
         var yDistance = destinationLatitude - currentPosition.latitude;
