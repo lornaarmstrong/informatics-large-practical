@@ -146,25 +146,25 @@ public class Drone {
 	        return angleRoundedDown;
 	    }
 	}
-
-    /*
-     * Adds the starting point to the route
-     */
-    public void startRoute() {
-        var startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
-        route.add(startPoint); 
-    }
-    
-    /*
-     * Check if the drone is close to the starting position (<0.0003)
-     */
-    private boolean backToStart() throws IOException, InterruptedException {
-        var currentLatitude = this.currentPosition.getLatitude();
-        var currentLongitude = this.currentPosition.getLongitude();
-        var startLatitude = this.startPosition.getLatitude();
-        var startLongitude = this.startPosition.getLongitude();
-        return (calculateDistance(currentLatitude, currentLongitude, startLatitude, startLongitude) < 0.0003);
-    }
+	
+	/*
+	 * Adds the starting point to the route
+	 */
+	public void startRoute() {
+	    var startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
+	    route.add(startPoint); 
+	}
+	
+	/*
+	 * Check if the drone is close to the starting position (<0.0003)
+	 */
+	private boolean backToStart() throws IOException, InterruptedException {
+	    var currentLatitude = this.currentPosition.getLatitude();
+	    var currentLongitude = this.currentPosition.getLongitude();
+	    var startLatitude = this.startPosition.getLatitude();
+	    var startLongitude = this.startPosition.getLongitude();
+	    return (calculateDistance(currentLatitude, currentLongitude, startLatitude, startLongitude) < 0.0003);
+	}
     
     /*
      * Check if drone is within the range of the sensor (<0.0002 degrees)
