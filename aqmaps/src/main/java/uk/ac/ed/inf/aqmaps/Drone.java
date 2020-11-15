@@ -74,12 +74,8 @@ public class Drone {
       var count = 0;
       while (this.moves > 0 && sensors.size() > 0) {
           var direction = getDirection();
-          
-//          // Print out all sensors
-//          for (Sensor sensor : sensors) {
-//              System.out.println("Sensor next: " + sensor.getCoordinate().toString());
-//          }
           moveDrone(direction);
+          System.out.println("Number of moves left: " + moves);
 //          if (count == 50) {
 //              moves = 0;
 //          }
@@ -105,7 +101,7 @@ public class Drone {
         Point nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
         route.add(nextPoint);
         
-        System.out.println("Aiming for sensor: " + sensors.get(0).getCoordinate().toString());
+        //System.out.println("Aiming for sensor: " + sensors.get(0).getCoordinate().toString());
         
         // Check if this new position is in range of the destination sensor
         if (withinSensorRange(sensors.get(0))) {
@@ -118,6 +114,7 @@ public class Drone {
         // Use trigonometry to calculate the longitude and latitude values
         Double xValue = moveLength * Math.cos(radians);
         Double yValue = moveLength * Math.sin(radians);
+        //System.out.println(Math.pow(xValue, 2) + Math.pow(yValue, 2));
         
         // Update the drone's position
         Double newLatitude = initialLatitude + yValue;
@@ -133,17 +130,32 @@ public class Drone {
     
     private int getDirection() throws IOException, InterruptedException {
         // Gets the first sensor in the list left to visit (destination sensor)
-        var destination = sensors.get(0);
+        Sensor destination = new Sensor(null, 0.0, null);
+        double destinationLatitude;
+        double destinationLongitude;
+                
+        System.out.println("Sensors size" + sensors.size() + sensors.get(0).getCoordinate().toString());
+        if (sensors.size() != 0) {
+            destination = sensors.get(0);
+            destinationLatitude = destination.getCoordinate().latitude;
+            destinationLongitude = destination.getCoordinate().longitude;
+        }
+        else {
+            // If we have visited all sensors, return to the start
+            System.out.println("Heading back to the start");
+            destinationLatitude = this.startPosition.latitude;
+            destinationLongitude = this.startPosition.longitude;
+        }
         
         // calculate the angle of the line needed to get to the sensor
-        var yDistance = destination.getCoordinate().latitude - currentPosition.latitude;
-        var xDistance = destination.getCoordinate().longitude - currentPosition.longitude;
+        var yDistance = destinationLatitude - currentPosition.latitude;
+        var xDistance = destinationLongitude - currentPosition.longitude;
         
         var angleRadians = Math.atan(yDistance / xDistance);
         var angleDegrees = Math.toDegrees(angleRadians);
         double angleFromEast = 0.0;
         if (xDistance > 0 && yDistance > 0) {
-            // no action needed, already reading from East
+            angleFromEast = angleDegrees;
         } else if (xDistance < 0 && yDistance > 0) {
             angleFromEast = 180 - Math.abs(angleDegrees); // update to read from the East, anticlockwise
         } else if (xDistance < 0 && yDistance < 0) {
@@ -152,9 +164,6 @@ public class Drone {
             angleFromEast = 360 - (Math.abs(angleDegrees));
         }
         
-        //var angleRadians = Math.atan(yDistance / xDistance);
-        //var angleDegrees = Math.toDegrees(angleRadians);
-        //angleDegrees = (angleDegrees + 360) % 360;
         // Round the angle to a multiple of 10 -------------------------------------------------
         int angleRounded;
         var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
@@ -165,9 +174,9 @@ public class Drone {
             angleRounded = angleRoundedDown;
         }
         // -------------------------------------------------------------------------------------
-        System.out.println("Destination: " + sensors.get(0).getCoordinate().toString());
-        System.out.println("y distance: " +yDistance + "    x distance: " + xDistance);
-        System.out.println("angle in degrees: " + angleFromEast + "     = " + angleRounded);
+        //System.out.println("Destination: " + sensors.get(0).getCoordinate().toString());
+        //System.out.println("y distance: " +yDistance + "    x distance: " + xDistance);
+        //System.out.println("angle in degrees: " + angleFromEast + "     = " + angleRounded);
         return angleRounded;
     }
 
