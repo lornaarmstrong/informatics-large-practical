@@ -72,6 +72,7 @@ public class Coordinate {
         return updatedPosition;
     }
 	
+    
 	// TODO method:
 	// - add if in disallowed building area...
 }
