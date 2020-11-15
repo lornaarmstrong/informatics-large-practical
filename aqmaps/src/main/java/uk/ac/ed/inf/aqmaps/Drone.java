@@ -53,6 +53,9 @@ public class Drone {
 	    return this.sensors;
 	}
 	
+	/*
+	 * Move the drone to create a route visiting all sensors (if possible)
+	 */
 	public void visitSensors() throws IOException, InterruptedException {
 	    var keepGoing = true;
 	    while (keepGoing) {
@@ -67,44 +70,42 @@ public class Drone {
 	        }
 	    }
     }
-   
-
-    /*
+	
+	/*
      * Move the drone, update its position and add the new position coordinates to route
      */
-    public void moveDrone(int direction) throws IOException, InterruptedException {
-        this.moves -= 1;
-        var initialLatitude = this.currentPosition.latitude;
-        var initialLongitude = this.currentPosition.longitude;
-       
-        // Move the drone to next position and add this to the route
-        this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
-        var nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
-        route.add(nextPoint);
-        
-        // Check if this new position is in range of the destination sensor
-        if (sensors.size() > 0) {
-            if (withinSensorRange(sensors.get(0))) {
-                takeReading();
-                sensors.remove(0);
-            }
-        }
-        // Convert radians to degrees
-        double radians = Math.toRadians(direction);
-        
-        // Use trigonometry to calculate the longitude and latitude values
-        Double xValue = moveLength * Math.cos(radians);
-        Double yValue = moveLength * Math.sin(radians);
-        
-        // Update the drone's position
-        Double newLatitude = initialLatitude + yValue;
-        Double newLongitude = initialLongitude + xValue;
-        currentPosition = new Coordinate(newLatitude, newLongitude);
+	public void moveDrone(int direction) throws IOException, InterruptedException {
+	    this.moves -= 1;
+	    var initialLatitude = this.currentPosition.latitude;
+	    var initialLongitude = this.currentPosition.longitude;
+	    // Move the drone to next position and add this to the route
+	    this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
+	    var nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
+	    route.add(nextPoint);
+	    // Check if this new position is in range of the destination sensor
+	    if (sensors.size() > 0) {
+	        if (withinSensorRange(sensors.get(0))) {
+	            takeReading();
+	            sensors.remove(0);
+	        }
+	    }
+	    // Convert radians to degrees
+	    var radians = Math.toRadians(direction);
+	    // Use trigonometry to calculate the longitude and latitude values
+	    var xValue = moveLength * Math.cos(radians);
+	    var yValue = moveLength * Math.sin(radians);
+	    // Update the drone's position
+	    var newLatitude = initialLatitude + yValue;
+	    var newLongitude = initialLongitude + xValue;
+	    currentPosition = new Coordinate(newLatitude, newLongitude);
     }
-
-    private void takeReading() {
-        System.out.println("--- reading taken ---");
-    }
+	
+	/*
+	 * Take the sensor reading of battery percentage and air quality reading
+	 */
+	private void takeReading() {
+	    System.out.println("--- reading taken ---");
+	}
     
     /*
      * 
