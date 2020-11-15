@@ -72,8 +72,8 @@ public class Drone {
 	}
 	
 	/*
-     * Move the drone, update its position and add the new position coordinates to route
-     */
+	 * Move the drone, update its position and add the new position coordinates to route
+	 */
 	public void moveDrone(int direction) throws IOException, InterruptedException {
 	    this.moves -= 1;
 	    var initialLatitude = this.currentPosition.latitude;
