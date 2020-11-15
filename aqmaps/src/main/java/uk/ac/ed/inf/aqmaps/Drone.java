@@ -69,7 +69,7 @@ public class Drone {
 	            keepGoing = false;
 	        }
 	    }
-    }
+	}
 	
 	/*
      * Move the drone, update its position and add the new position coordinates to route
