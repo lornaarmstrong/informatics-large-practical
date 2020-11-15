@@ -98,7 +98,7 @@ public class Drone {
 	    var newLatitude = initialLatitude + yValue;
 	    var newLongitude = initialLongitude + xValue;
 	    currentPosition = new Coordinate(newLatitude, newLongitude);
-    }
+	}
 	
 	/*
 	 * Take the sensor reading of battery percentage and air quality reading
