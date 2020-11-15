@@ -16,6 +16,7 @@ public class Drone {
 	private Coordinate currentPosition;
 	public int moves;
 	public Coordinate startPosition;
+	boolean returningToStart;
 	public double moveLength = 0.0003;
 	public ArrayList<Point> route = new ArrayList<Point>();
 	private ArrayList<Sensor> sensors = new ArrayList<Sensor>();
@@ -23,6 +24,7 @@ public class Drone {
     public Drone(Coordinate startPosition) {
         this.currentPosition = startPosition;
         this.startPosition = startPosition;
+        this.returningToStart = false;
         this.moves = 150;
     }
 
@@ -55,27 +57,50 @@ public class Drone {
 	 * Check if drone is within the range of the sensor (<0.0002 degrees)
 	 */
     public boolean withinSensorRange(Sensor sensor) throws IOException, InterruptedException {
-        return (calculateDistance(sensor) < 0.0002);
+        double sensorLatitude = sensor.getCoordinate().latitude;
+        double sensorLongitude = sensor.getCoordinate().longitude;
+        double positionLatitude = this.currentPosition.latitude;
+        double positionLongitude = this.currentPosition.longitude;
+        return (calculateDistance(sensorLatitude, sensorLongitude, positionLatitude, positionLongitude) < 0.0002);
     }
     
     /*
      *  Calculate distance between drone and sensor
      */
-    public double calculateDistance(Sensor sensor) throws IOException, InterruptedException { 
-        var x1 = this.currentPosition.latitude;
-        var y1 = this.currentPosition.longitude;
-        var x2 = sensor.getCoordinate().latitude;
-        var y2 = sensor.getCoordinate().longitude;
+    public double calculateDistance(double fromLatitude, double fromLongitude, double toLatitude, double toLongitude ) { 
+        //var x1 = this.currentPosition.latitude;
+        //var y1 = this.currentPosition.longitude;
+        var x1 = toLatitude;
+        var y1 = toLongitude;
+        var x2 = fromLatitude;
+        var y2 = fromLongitude;
         var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
         return distance;
     }
     
     public void visitSensors() throws IOException, InterruptedException {
-      var count = 0;
-      while (this.moves > 0 && sensors.size() > 0) {
+      //var count = 0;
+      // make keepGOing false if we have got back to the start
+      boolean keepGoing = true;
+      while (keepGoing) {
+          //System.out.println(this.moves > 0 && (sensors.size() >= 0 || !backToStart()));
+          System.out.println(backToStart());
+          //System.out.println(returningToStart());
+          System.out.println(this.moves > 0 && (!(backToStart())));
+          //if (backToStart()) {
+            //  break;
+          //}
           var direction = getDirection();
           moveDrone(direction);
           System.out.println("Number of moves left: " + moves);
+          System.out.println("Back to start: " + backToStart() + "     Returning to start: " + returningToStart);
+          
+          if (this.moves == 0) {
+              keepGoing = false;
+          } else if (backToStart() && returningToStart) {
+              keepGoing = false;
+          }
+          System.out.println("Keep going: " + keepGoing);
 //          if (count == 50) {
 //              moves = 0;
 //          }
@@ -83,6 +108,14 @@ public class Drone {
       }
   }
     
+    private boolean backToStart() throws IOException, InterruptedException {
+        double currentLatitude = this.currentPosition.getLatitude();
+        double currentLongitude = this.currentPosition.getLongitude();
+        double startLatitude = this.startPosition.getLatitude();
+        double startLongitude = this.startPosition.getLongitude();
+        return (calculateDistance(currentLatitude, currentLongitude, startLatitude, startLongitude) < 0.0003);
+    }
+
     /*
      * Moves the drone, updates its position and adds the new coordinates to path
      */
@@ -104,9 +137,11 @@ public class Drone {
         //System.out.println("Aiming for sensor: " + sensors.get(0).getCoordinate().toString());
         
         // Check if this new position is in range of the destination sensor
-        if (withinSensorRange(sensors.get(0))) {
-           takeReading();
-           sensors.remove(0);
+        if (sensors.size() > 0) {
+            if (withinSensorRange(sensors.get(0))) {
+                takeReading();
+                sensors.remove(0);
+            }
         }
         // Convert radians to degrees
         double radians = Math.toRadians(direction);
@@ -134,7 +169,7 @@ public class Drone {
         double destinationLatitude;
         double destinationLongitude;
                 
-        System.out.println("Sensors size" + sensors.size() + sensors.get(0).getCoordinate().toString());
+        //System.out.println("Sensors size" + sensors.size() + sensors.get(0).getCoordinate().toString());
         if (sensors.size() != 0) {
             destination = sensors.get(0);
             destinationLatitude = destination.getCoordinate().latitude;
@@ -143,6 +178,7 @@ public class Drone {
         else {
             // If we have visited all sensors, return to the start
             System.out.println("Heading back to the start");
+            returningToStart = true;
             destinationLatitude = this.startPosition.latitude;
             destinationLongitude = this.startPosition.longitude;
         }
