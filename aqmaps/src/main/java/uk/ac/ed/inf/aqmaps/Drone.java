@@ -107,9 +107,6 @@ public class Drone {
 	    System.out.println("--- reading taken ---");
 	}
 	
-	/*
-     * 
-     */
 	private int getDirection() throws IOException, InterruptedException {
 	    // Gets the first sensor in the list left to visit (destination sensor)
 	    double destinationLatitude;
@@ -124,33 +121,31 @@ public class Drone {
 	        destinationLatitude = this.startPosition.latitude;
 	        destinationLongitude = this.startPosition.longitude;
 	    }
-        
-        // Calculate the angle of the line needed to get to the sensor
-        var yDistance = destinationLatitude - currentPosition.latitude;
-        var xDistance = destinationLongitude - currentPosition.longitude;
-        var angleRadians = Math.atan(yDistance / xDistance);
-        var angleDegrees = Math.toDegrees(angleRadians);
-        
-        var angleFromEast = 0.0;
-        // Calculate the angle anti-clockwise, with East = 0 degrees
-        if (xDistance > 0 && yDistance > 0) {
-            angleFromEast = angleDegrees;
-        } else if (xDistance < 0 && yDistance > 0) {
-            angleFromEast = 180 - Math.abs(angleDegrees);
-        } else if (xDistance < 0 && yDistance < 0) {
-            angleFromEast = 180 + angleDegrees;
-        } else if (xDistance > 0 && yDistance < 0) {
-            angleFromEast = 360 - (Math.abs(angleDegrees));
-        }
-        // Round up or down to the corresponding multiple of 10
-        var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
-        var angleRoundedUp = (int) ((10 - angleDegrees % 10) + angleFromEast);
-        if ( (angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
-            return angleRoundedUp;
-        } else {
-            return angleRoundedDown;
-        }
-    }
+	    // Calculate the angle of the line needed to get to the sensor
+	    var yDistance = destinationLatitude - currentPosition.latitude;
+	    var xDistance = destinationLongitude - currentPosition.longitude;
+	    var angleRadians = Math.atan(yDistance / xDistance);
+	    var angleDegrees = Math.toDegrees(angleRadians);
+	    var angleFromEast = 0.0;
+	    // Calculate the angle anti-clockwise, with East = 0 degrees
+	    if (xDistance > 0 && yDistance > 0) {
+	        angleFromEast = angleDegrees;
+	    } else if (xDistance < 0 && yDistance > 0) {
+	        angleFromEast = 180 - Math.abs(angleDegrees);
+	    } else if (xDistance < 0 && yDistance < 0) {
+	        angleFromEast = 180 + angleDegrees;
+	    } else if (xDistance > 0 && yDistance < 0) {
+	        angleFromEast = 360 - (Math.abs(angleDegrees));
+	    }
+	    // Round up or down to the corresponding multiple of 10
+	    var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
+	    var angleRoundedUp = (int) ((10 - angleDegrees % 10) + angleFromEast);
+	    if ((angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
+	        return angleRoundedUp;
+	    } else {
+	        return angleRoundedDown;
+	    }
+	}
 
     /*
      * Adds the starting point to the route
