@@ -116,7 +116,8 @@ public class Drone {
 	        destinationLatitude = destination.getCoordinate().latitude;
 	        destinationLongitude = destination.getCoordinate().longitude;
 	    } else {
-	        // There are no sensors left to visit, so the next destination is back to the drone starting position
+	        // There are no sensors left to visit
+	        // The next destination is back to the drone starting position
 	        returningToStart = true;
 	        destinationLatitude = this.startPosition.latitude;
 	        destinationLongitude = this.startPosition.longitude;
@@ -163,29 +164,27 @@ public class Drone {
 	    var currentLongitude = this.currentPosition.getLongitude();
 	    var startLatitude = this.startPosition.getLatitude();
 	    var startLongitude = this.startPosition.getLongitude();
-	    return (calculateDistance(currentLatitude, currentLongitude, startLatitude, startLongitude) < 0.0003);
+	    return (calculateDistance(currentLatitude, currentLongitude, 
+	            startLatitude, startLongitude) < 0.0003);
 	}
-    
-    /*
-     * Check if drone is within the range of the sensor (<0.0002 degrees)
-     */
-    public boolean withinSensorRange(Sensor sensor) throws IOException, InterruptedException {
-        var sensorLatitude = sensor.getCoordinate().latitude;
-        var sensorLongitude = sensor.getCoordinate().longitude;
-        var positionLatitude = this.currentPosition.latitude;
-        var positionLongitude = this.currentPosition.longitude;
-        return (calculateDistance(sensorLatitude, sensorLongitude, positionLatitude, positionLongitude) < 0.0002);
-    }
-    
-    /*
-     *  Calculate Euclidean distance between two sets of latitude and longitude
-     */
-    public double calculateDistance(double fromLatitude, double fromLongitude, double toLatitude, double toLongitude ) { 
-        var x1 = toLatitude;
-        var y1 = toLongitude;
-        var x2 = fromLatitude;
-        var y2 = fromLongitude;
-        var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
-        return distance;
-    }
+	/*
+	 *  Check if drone is within the range of the sensor (<0.0002 degrees)
+	 */
+	public boolean withinSensorRange(Sensor sensor) throws IOException, InterruptedException {
+	    var sensorLatitude = sensor.getCoordinate().latitude;
+	    var sensorLongitude = sensor.getCoordinate().longitude;
+	    var positionLatitude = this.currentPosition.latitude;
+	    var positionLongitude = this.currentPosition.longitude;
+	    return (calculateDistance(sensorLatitude, sensorLongitude, 
+	            positionLatitude, positionLongitude) < 0.0002);
+	}
+	/*
+	 * Calculate Euclidean distance between two sets of latitude and longitude
+	 */
+	public double calculateDistance(double fromLatitude, double fromLongitude,
+	        double toLatitude, double toLongitude) { 
+	    var distance = Math.sqrt(Math.pow((toLatitude - fromLatitude), 2) 
+	            + Math.pow((toLongitude - fromLongitude), 2));
+	    return distance;
+	}
 }
