@@ -27,8 +27,8 @@ public class Drone {
 	    this.returningToStart = false;
 	    this.moves = 150;
 	}
-
-    // Getters and Setters
+	
+	// Getters and Setters
 	public Coordinate getPosition() {
 		return this.currentPosition;
 	}
@@ -49,31 +49,28 @@ public class Drone {
 	    this.sensors = sensors;
 	}
 	
-    public ArrayList<Sensor> getSensors() {
-        return this.sensors;
+	public ArrayList<Sensor> getSensors() {
+	    return this.sensors;
+	}
+	
+	public void visitSensors() throws IOException, InterruptedException {
+	    var keepGoing = true;
+	    while (keepGoing) {
+	        var direction = getDirection();
+	        moveDrone(direction);
+	        
+	        // Check the 'stopping' conditions
+	        if (this.moves == 0) {
+	            keepGoing = false;
+	        } else if (backToStart() && returningToStart) {
+	            keepGoing = false;
+	        }
+	    }
     }
-    
-    /*
-     * 
-     */
-    public void visitSensors() throws IOException, InterruptedException {
-      boolean keepGoing = true;
-      while (keepGoing) {
-          var direction = getDirection();
-          moveDrone(direction);
-          
-          // Check the 'stopping' conditions
-          if (this.moves == 0) {
-              keepGoing = false;
-          } else if (backToStart() && returningToStart) {
-              keepGoing = false;
-          }
-      }
-  }
    
 
     /*
-     * Moves the drone, updates its position and adds the new coordinates to path
+     * Move the drone, update its position and add the new position coordinates to route
      */
     public void moveDrone(int direction) throws IOException, InterruptedException {
         this.moves -= 1;
