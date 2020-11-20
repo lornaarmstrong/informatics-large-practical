@@ -17,7 +17,7 @@ public class Drone {
 	public int moves;
 	public Coordinate startPosition;
 	boolean returningToStart;
-	public double moveLength = 0.0003;
+	public final double moveLength = 0.0003;
 	public ArrayList<Point> route = new ArrayList<Point>();
 	private ArrayList<Sensor> sensors = new ArrayList<Sensor>();
 	public ArrayList<Sensor> checkedSensors = new ArrayList<Sensor>();
