@@ -41,7 +41,7 @@ public class App
     public static List<Point> destinations = new ArrayList<Point>();
     public static double[][] distanceMatrix = new double [34][34];
     
-    public static void main( String[] args ) throws IOException, InterruptedException {
+    public static void main( String[] args ) throws Exception {
         // Get the input 
         String day = args[0];
         String month = args[1];
@@ -286,25 +286,78 @@ public class App
     }
     
 
-    public static ArrayList<Feature> createMarkers() throws IOException, InterruptedException {
+    public static ArrayList<Feature> createMarkers() throws Exception {
         var markerFeatures = new ArrayList<Feature>();
         
         // Create a Feature for every marker in sensor list
-        for (Sensor sensor: sensorList) {
+        for (Sensor sensor: drone.checkedSensors) {
             // Create a marker for that coordinate
             Coordinate markerCoordinate = sensor.getCoordinate();
             Point markerPoint = Point.fromLngLat(markerCoordinate.longitude, markerCoordinate.latitude);
             var markerGeometry = (Geometry) markerPoint;
             var markerFeature = Feature.fromGeometry(markerGeometry);
             
-            // Add features  (TODO make this a separate function when needed!)
-            markerFeature.addStringProperty("rgb-string", "#00ff00");
-            markerFeature.addStringProperty("marker-color", "#00ff00");
-            markerFeature.addStringProperty("marker-symbol", "lighthouse");
+            var rgbValue = "";
+            var symbol = "";
+            // If the battery level is high enough for an accurate reading..
+            if (sensor.getBattery() >= 10) {
+                double reading = Double.parseDouble(sensor.getReading());
+                rgbValue = getRGBString(reading);
+                symbol = getMarkerSymbol(reading);
+            } else {
+                // Report the sensor as needing a new battery and discard the reading
+                rgbValue = "#000000";
+                symbol = "cross";
+            }
+            // Create the markers with the four properties
+            markerFeature.addStringProperty("location", sensor.getLocation());
+            markerFeature.addStringProperty("rgb-string", rgbValue);
+            markerFeature.addStringProperty("marker-color", rgbValue);
+            markerFeature.addStringProperty("marker-symbol", symbol);
             markerFeatures.add(markerFeature);
         }
         
         return markerFeatures;
+    }
+    
+    /*
+     * Returns corresponding RGB value for the colour mapping based on sensor reading value
+     */
+    public static String getRGBString(double value) throws Exception {
+        if (0 <= value && value < 32) {
+            return "#00ff00";
+        } else if (32 <= value && value < 64) {
+            return "#40ff00";
+        } else if (64 <= value && value < 96) {
+            return "#80ff00";
+        } else if (96 <= value && value < 128) {
+            return "#c0ff00";
+        } else if (128 <= value && value < 160) {
+            return "#ffc000";
+        } else if (160 <= value && value < 192) {
+            return "#ff8000";
+        } else if (192 <= value && value < 224) {
+            return "#ff4000";
+        } else if (224 <= value && value < 256) {
+            return "#ff0000";
+        } else {
+            // This is the case for if the prediction value is not in range
+            throw new Exception("The prediction value must be between 0 and 255 (inclusive)");
+        }
+    }
+    
+    /*
+     * Returns the corresponding marker symbol for the sensor reading value
+     */
+    public static String getMarkerSymbol(double value) throws Exception {
+        if (0 <= value && value < 128) {
+            return "lighthouse";
+        } else if (128 <= value && value < 256) {
+            return "danger";
+        } else {
+            // This is the case for if the prediction value is not in range
+            throw new Exception("The prediction value must be between 0 and 255 (inclusive)");
+        }
     }
 
     

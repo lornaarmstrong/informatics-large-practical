@@ -20,6 +20,7 @@ public class Drone {
 	public double moveLength = 0.0003;
 	public ArrayList<Point> route = new ArrayList<Point>();
 	private ArrayList<Sensor> sensors = new ArrayList<Sensor>();
+	public ArrayList<Sensor> checkedSensors = new ArrayList<Sensor>();
 	
 	public Drone(Coordinate startPosition) {
 	    this.currentPosition = startPosition;
@@ -84,8 +85,9 @@ public class Drone {
 	    route.add(nextPoint);
 	    // Check if this new position is in range of the destination sensor
 	    if (sensors.size() > 0) {
-	        if (withinSensorRange(sensors.get(0))) {
-	            takeReading();
+	        Sensor sensor = sensors.get(0);
+	        if (withinSensorRange(sensor)) {
+	            takeReading(sensor);
 	            sensors.remove(0);
 	        }
 	    }
@@ -103,8 +105,13 @@ public class Drone {
 	/*
 	 * Take the sensor reading of battery percentage and air quality reading
 	 */
-	private void takeReading() {
+	private void takeReading(Sensor sensor) {
 	    System.out.println("--- reading taken ---");
+	    var sensorBatteryLevel = sensor.getBattery();
+	    var sensorLocation = sensor.getLocation();
+	    var sensorReading = sensor.getReading();
+	    Sensor checkedSensor = new Sensor(sensorLocation, sensorBatteryLevel, sensorReading);
+	    checkedSensors.add(sensor);
 	}
 	
 	private int getDirection() throws IOException, InterruptedException {
