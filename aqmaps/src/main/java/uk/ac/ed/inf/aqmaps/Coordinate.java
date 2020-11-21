@@ -1,5 +1,10 @@
 package uk.ac.ed.inf.aqmaps;
 
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
+import com.mapbox.turf.*;
+
 /**
  * Coordinate class, as pairs of latitude and longitude values
  *
@@ -53,6 +58,23 @@ public class Coordinate {
 	}
 	
 	/*
+	 * Check if the coordinate is in a forbidden zone
+	 */
+	public boolean isInNoFlyZone() {
+	    for (Feature feature: App.noFlyZones) {
+	        Polygon polygon = (Polygon) feature.geometry();
+	        Point point = Point.fromLngLat(this.longitude, this.latitude);
+	        boolean isInside = TurfJoins.inside(point, polygon);
+	        if (isInside) {
+	            System.out.println("Point is in no fly zone, adding to poinInZone");
+	            App.pointsInZones.add(point);
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+	
+	/*
 	 * A useful function that represents the coordinate as a string
 	 */
 	public String toString() {
@@ -71,8 +93,5 @@ public class Coordinate {
         updatedPosition = new Coordinate(this.latitude + yValue, this.longitude + xValue);
         return updatedPosition;
     }
-	
-    
-	// TODO method:
-	// - add if in disallowed building area...
+
 }

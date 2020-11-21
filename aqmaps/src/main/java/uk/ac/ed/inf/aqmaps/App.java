@@ -7,6 +7,7 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -33,13 +34,17 @@ public class App
     public static List<Sensor> sensorList = new ArrayList<Sensor>(); // list of all sensors to be visited in the day
     public static List<Point> visitedPointList = new ArrayList<>();
     public static ArrayList<Sensor> sensorsInOrder = new ArrayList<Sensor>(); // list of all sensors in the order they should be visited
-    public static FeatureCollection noFlyZones; // areas the drone cannot fly into
+    public static List<Feature> noFlyZones; // areas the drone cannot fly into
+    public static List<Polygon> noFlyPolygons;
     public static int portNumber;
     public static Drone drone;
     public static List<Point> path = new ArrayList<Point>(); // the coordinates of the path of the drone
     public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
     public static List<Point> destinations = new ArrayList<Point>();
     public static double[][] distanceMatrix = new double [34][34];
+    
+    // for testing
+    public static List<Point> pointsInZones = new ArrayList<>();
     
     public static void main( String[] args ) throws Exception {
         // Get the input 
@@ -56,7 +61,15 @@ public class App
         // Get the list of sensors and no-fly zones
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
         sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked
-        noFlyZones = getNoFlyZoneList();
+        FeatureCollection noFlyZoneList = getNoFlyZoneList();
+        
+        // Breaking the no fly zones into polygons
+        noFlyZones = noFlyZoneList.features();
+//        for (Feature noFlyZoneFeature: noFlyFeatureList) {
+//            Geometry noFlyZoneGeometry = noFlyZoneFeature.geometry();
+//            Polygon noFlyZonePolygon = (Polygon) noFlyZoneGeometry;
+//            noFlyPolygons.add(noFlyZonePolygon);
+//        }
         
         // Create the drone's starting point and drone instance
         Coordinate startPosition = new Coordinate(startLatitude, startLongitude);
@@ -96,7 +109,6 @@ public class App
         // The 'expected' route (calculated using Nearest Insertion)
         idealRoute.add(startPoint);
         for (int i = 0; i < sensorsInOrder.size(); i++) {
-            //System.out.println("Adding sensor number " + i + " to path");
             Point sensorCoordinate = Point.fromLngLat(sensorsInOrder.get(i).getCoordinate().longitude, sensorsInOrder.get(i).getCoordinate().latitude);
             idealRoute.add(sensorCoordinate);
         }
@@ -104,6 +116,19 @@ public class App
         
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
+        // CHECKING -- PRINT THE NO FLY ZONES
+        for (Feature feature: noFlyZones) {
+            markerFeatures.add(feature);
+        }
+        // CHECKING -- PRINT OUT THE POSITION OF ANY POINTS IN BUILDINGS
+        if (pointsInZones.size() > 0) {
+            for (Point point : pointsInZones) {
+                var markerGeometry = (Geometry) point;
+                var markerFeature = Feature.fromGeometry(markerGeometry);
+                markerFeatures.add(markerFeature);
+            }   
+        }
+        
         // CHECKING -- PRINTING START LOCATION
         var pointStart = Point.fromLngLat(startLongitude, startLatitude);
         var startGeometry = (Geometry) pointStart;

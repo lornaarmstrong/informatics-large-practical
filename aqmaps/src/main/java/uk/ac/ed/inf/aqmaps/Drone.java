@@ -81,6 +81,7 @@ public class Drone {
 	    var initialLongitude = this.currentPosition.longitude;
 	    // Move the drone to next position and add this to the route
 	    this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
+	    boolean inNoFly = currentPosition.isInNoFlyZone();
 	    var nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
 	    route.add(nextPoint);
 	    // Check if this new position is in range of the destination sensor
