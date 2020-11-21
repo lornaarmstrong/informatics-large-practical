@@ -79,11 +79,19 @@ public class Drone {
 	    this.moves -= 1;
 	    var initialLatitude = this.currentPosition.latitude;
 	    var initialLongitude = this.currentPosition.longitude;
-	    // Move the drone to next position and add this to the route
+	    
+	    // Move the drone to next position
 	    this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
 	    boolean inNoFly = currentPosition.isInNoFlyZone();
+	    
+	    if (currentPosition.isInNoFlyZone()) {
+	        goRoundNoFlyZone(initialLatitude, initialLongitude);
+	    }
+	    
+	    // Add the new position to the route
 	    var nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
 	    route.add(nextPoint);
+	    
 	    // Check if this new position is in range of the destination sensor
 	    if (sensors.size() > 0) {
 	        Sensor sensor = sensors.get(0);
@@ -103,7 +111,19 @@ public class Drone {
 	    currentPosition = new Coordinate(newLatitude, newLongitude);
 	}
 	
-	/*
+	public void goRoundNoFlyZone(double initialLatitude, double initialLongitude) {
+        // The drone has reached a no fly zone and must then go round the building and continue
+	    // along its path to its destination
+	    
+	    // Set the drone back to previous move (where it is outside of the no fly zone)
+	    currentPosition.latitude = initialLatitude;
+	    currentPosition.longitude = initialLongitude;
+	    
+	    
+        
+    }
+
+    /*
 	 * Take the sensor reading of battery percentage and air quality reading
 	 */
 	private void takeReading(Sensor sensor) {
@@ -115,24 +135,48 @@ public class Drone {
 	    checkedSensors.add(sensor);
 	}
 	
+	/*
+	 * Returns the coordinate of the next point the drone is aiming for (either 
+	 * the next sensor to visit or back to the starting point)
+	 */
+	public Coordinate getDestination() throws IOException, InterruptedException {
+	    Coordinate destination;
+        if (sensors.size() != 0) {
+            Sensor destinationSensor = sensors.get(0);
+            var sensorCoordinate = destinationSensor.getCoordinate();
+            destination = new Coordinate (sensorCoordinate.latitude, sensorCoordinate.longitude);
+        } else {
+            // There are no sensors left to visit
+            // The next destination is back to the drone starting position
+            returningToStart = true;
+            destination = new Coordinate (this.startPosition.latitude, this.startPosition.longitude);
+        }
+        return destination;
+	}
+	
 	private int getDirection() throws IOException, InterruptedException {
 	    // Gets the first sensor in the list left to visit (destination sensor)
-	    double destinationLatitude;
-	    double destinationLongitude;
-	    if (sensors.size() != 0) {
-	        Sensor destination = sensors.get(0);
-	        destinationLatitude = destination.getCoordinate().latitude;
-	        destinationLongitude = destination.getCoordinate().longitude;
-	    } else {
-	        // There are no sensors left to visit
-	        // The next destination is back to the drone starting position
-	        returningToStart = true;
-	        destinationLatitude = this.startPosition.latitude;
-	        destinationLongitude = this.startPosition.longitude;
-	    }
+//	    double destinationLatitude;
+//	    double destinationLongitude;
+//	    
+//	    // call get destination
+//	    
+//	    if (sensors.size() != 0) {
+//	        Sensor destination = sensors.get(0);
+//	        destinationLatitude = destination.getCoordinate().latitude;
+//	        destinationLongitude = destination.getCoordinate().longitude;
+//	    } else {
+//	        // There are no sensors left to visit
+//	        // The next destination is back to the drone starting position
+//	        returningToStart = true;
+//	        destinationLatitude = this.startPosition.latitude;
+//	        destinationLongitude = this.startPosition.longitude;
+//	    }
+	    var destination = getDestination();
+	    
 	    // Calculate the angle of the line needed to get to the sensor
-	    var yDistance = destinationLatitude - currentPosition.latitude;
-	    var xDistance = destinationLongitude - currentPosition.longitude;
+	    var yDistance = destination.latitude - currentPosition.latitude;
+	    var xDistance = destination.longitude - currentPosition.longitude;
 	    var angleRadians = Math.atan(yDistance / xDistance);
 	    var angleDegrees = Math.toDegrees(angleRadians);
 	    var angleFromEast = 0.0;
