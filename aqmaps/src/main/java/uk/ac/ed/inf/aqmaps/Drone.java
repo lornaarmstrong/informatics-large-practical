@@ -84,9 +84,9 @@ public class Drone {
 	    this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
 	    boolean inNoFly = currentPosition.isInNoFlyZone();
 	    
-	    if (currentPosition.isInNoFlyZone()) {
-	        goRoundNoFlyZone(initialLatitude, initialLongitude);
-	    }
+	    //if (currentPosition.isInNoFlyZone()) {
+	    //    goRoundNoFlyZone(initialLatitude, initialLongitude);
+	    //}
 	    
 	    // Add the new position to the route
 	    var nextPoint = Point.fromLngLat(currentPosition.longitude, currentPosition.latitude);
@@ -111,7 +111,7 @@ public class Drone {
 	    currentPosition = new Coordinate(newLatitude, newLongitude);
 	}
 	
-	public void goRoundNoFlyZone(double initialLatitude, double initialLongitude) {
+	public void goRoundNoFlyZone(double initialLatitude, double initialLongitude) throws IOException, InterruptedException {
         // The drone has reached a no fly zone and must then go round the building and continue
 	    // along its path to its destination
 	    
@@ -119,7 +119,14 @@ public class Drone {
 	    currentPosition.latitude = initialLatitude;
 	    currentPosition.longitude = initialLongitude;
 	    
+	    // Get the coordinates of the destination the drone is aiming for
+	    //var destination = getDestination();
 	    
+	    // get the angle to the destination
+	    // move the angle 10 degrees anticlockwise
+	    // check if the point after one move in that direction is still in building
+	    // move the angle another 10 degrees anticlockwise
+	    // repeat until the point isn't in a building.
         
     }
 

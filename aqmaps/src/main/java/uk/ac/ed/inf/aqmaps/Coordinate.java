@@ -93,5 +93,4 @@ public class Coordinate {
         updatedPosition = new Coordinate(this.latitude + yValue, this.longitude + xValue);
         return updatedPosition;
     }
-
 }
