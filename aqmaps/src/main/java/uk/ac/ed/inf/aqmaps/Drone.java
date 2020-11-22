@@ -162,23 +162,6 @@ public class Drone {
 	}
 	
 	private int getDirection() throws IOException, InterruptedException {
-	    // Gets the first sensor in the list left to visit (destination sensor)
-//	    double destinationLatitude;
-//	    double destinationLongitude;
-//	    
-//	    // call get destination
-//	    
-//	    if (sensors.size() != 0) {
-//	        Sensor destination = sensors.get(0);
-//	        destinationLatitude = destination.getCoordinate().latitude;
-//	        destinationLongitude = destination.getCoordinate().longitude;
-//	    } else {
-//	        // There are no sensors left to visit
-//	        // The next destination is back to the drone starting position
-//	        returningToStart = true;
-//	        destinationLatitude = this.startPosition.latitude;
-//	        destinationLongitude = this.startPosition.longitude;
-//	    }
 	    var destination = getDestination();
 	    
 	    // Calculate the angle of the line needed to get to the sensor
@@ -226,6 +209,7 @@ public class Drone {
 	    return (calculateDistance(currentLatitude, currentLongitude, 
 	            startLatitude, startLongitude) < 0.0003);
 	}
+	
 	/*
 	 * Check if drone is within the range of the sensor (<0.0002 degrees)
 	 */

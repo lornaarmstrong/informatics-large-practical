@@ -130,14 +130,14 @@ public class App
         }
         
         // CHECKING -- PRINTING START LOCATION
-        var pointStart = Point.fromLngLat(startLongitude, startLatitude);
-        var startGeometry = (Geometry) pointStart;
-        var startFeature = Feature.fromGeometry(startGeometry);
-        startFeature.addStringProperty("rgb-string", "#000000");
-        startFeature.addStringProperty("marker-color", "#000000");
-        startFeature.addStringProperty("marker-symbol", "lighthouse");
-        markerFeatures.add(startFeature);
-        // CHECKING -- PRINTING ALL PATH SO FAR
+//        var pointStart = Point.fromLngLat(startLongitude, startLatitude);
+//        var startGeometry = (Geometry) pointStart;
+//        var startFeature = Feature.fromGeometry(startGeometry);
+//        startFeature.addStringProperty("rgb-string", "#000000");
+//        startFeature.addStringProperty("marker-color", "#000000");
+//        startFeature.addStringProperty("marker-symbol", "lighthouse");
+//        markerFeatures.add(startFeature);
+//        // CHECKING -- PRINTING ALL PATH SO FAR
 //        var pathLine = LineString.fromLngLats(idealRoute);
 //        var pathGeometry = (Geometry) pathLine;
 //        var pathFeature = Feature.fromGeometry(pathGeometry);
