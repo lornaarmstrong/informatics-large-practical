@@ -17,6 +17,8 @@ import java.net.URI;
 public class Sensor {
 	
 	private String location;
+	// latitude and longitude?
+	private Coordinate position;
 	private double battery;
 	private String reading;
 	
@@ -24,6 +26,7 @@ public class Sensor {
 		this.location = location;
 		this.battery = battery;
 		this.reading = reading;
+		this.position = null;
 	}
 	
 	// Getters and Setters
@@ -34,6 +37,14 @@ public class Sensor {
 	public void setLocation(String location) {
 		this.location = location;
 	}
+	
+    public Coordinate getPosition() {
+        return this.position;
+    }
+    
+    public void setPosition(double latitude, double longitude) {
+        this.position = new Coordinate(latitude, longitude);
+    }
 	
 	public double getBattery() {
 		return this.battery;
@@ -54,7 +65,7 @@ public class Sensor {
 	/*
 	 *  Find the latitude and longitude for the what3words location, returned as a Coordinate
 	 */
-	public Coordinate getCoordinate() throws IOException, InterruptedException {
+	public void translateWhat3Words() throws IOException, InterruptedException {
 	        // Split the what3words into the 3 separate words
 	        var words = location.split("\\.");
 	    
@@ -68,14 +79,15 @@ public class Sensor {
 	        // Check the response.statusCode()
 	        int statusCode = response.statusCode();
 	        if (statusCode == 200) {
-	            //System.out.println("Response received correctly.");
 	            // Get the latitude and longitude and make it a Coordinate
 	            var word = new Gson().fromJson(response.body(), Word.class);
 	            // Get the coordinates of the location
 	            var longitude = word.getCoordinates().getLng();
                 var latitude = word.getCoordinates().getLat();
-	            Coordinate coordinate = new Coordinate(latitude, longitude);
-	            return coordinate;
+                
+                // Add the latitude and longitude to the sensor
+                setPosition(latitude, longitude);
+
 	        } else if (statusCode == 404){
 	            // There is an error with the request
 	            System.out.println("The server cannot find the requested resource [error 404]");
@@ -83,6 +95,5 @@ public class Sensor {
 	            // For other server status codes
 	            System.out.println("The status code is " + statusCode);
 	    }
-	    return null;
 	}
 }

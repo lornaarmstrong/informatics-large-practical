@@ -61,8 +61,13 @@ public class App
         
         // Get the list of sensors and no-fly zones
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
-        sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked
+        sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked        
         FeatureCollection noFlyZoneList = getNoFlyZoneList();
+        
+        // Get the latitude and longitude values of each sensor
+        for (Sensor sensor: sensorList) {
+            sensor.translateWhat3Words();
+        }
         
         // Breaking the no fly zones into polygons
         noFlyZones = noFlyZoneList.features();
@@ -80,16 +85,9 @@ public class App
         System.out.println("Drone start: " + drone.startPosition.latitude + ", " + drone.startPosition.longitude);
 
         calculateDistanceMatrix();
-//        // Print distance matrix
-//        System.out.println("Distance Matrix -----------");
-//        for (int i = 0; i < distanceMatrix.length; i++) {
-//            System.out.println(Arrays.toString(distanceMatrix[i]));
-//        }
-//        System.out.println("-----------------------");
        
         // Find nearest node J, move to it, and build the partial tour (I, J)
         Sensor nearestSensor = findNearestSensor(startPosition);
-        System.out.println("First sensor to visit: " + nearestSensor.getCoordinate().latitude + ", " + nearestSensor.getCoordinate().longitude);
         sensorsInOrder.add(nearestSensor);
        
         System.out.println("Loop through all sensors and add them to the sensorsInOrder list");
@@ -110,7 +108,10 @@ public class App
         // The 'expected' route (calculated using Nearest Insertion)
         idealRoute.add(startPoint);
         for (int i = 0; i < sensorsInOrder.size(); i++) {
-            Point sensorCoordinate = Point.fromLngLat(sensorsInOrder.get(i).getCoordinate().longitude, sensorsInOrder.get(i).getCoordinate().latitude);
+            Sensor sensor = sensorsInOrder.get(i);
+            // Create a point containing the latitude and longitude associated with the What 3 Words location.
+            Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
+            //Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
             idealRoute.add(sensorCoordinate);
         }
         idealRoute.add(startPoint);
@@ -118,9 +119,9 @@ public class App
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
         // CHECKING -- PRINT THE NO FLY ZONES
-//        for (Feature feature: noFlyZones) {
-//            markerFeatures.add(feature);
-//        }
+        for (Feature feature: noFlyZones) {
+            markerFeatures.add(feature);
+        }
 //        // CHECKING -- PRINT OUT THE POSITION OF ANY POINTS IN BUILDINGS
 //        if (pointsInZones.size() > 0) {
 //            for (Point point : pointsInZones) {
@@ -172,17 +173,17 @@ public class App
                     distanceMatrix[i][j] = 100;
                 } else {
                     if (i == 0) {
-                        var destination = sensorList.get(j - 1).getCoordinate();
+                        var destination = sensorList.get(j - 1).getPosition();
                         var startFrom = drone.startPosition;
                         distanceMatrix[i][j] = getEuclideanDistance(startFrom, destination);
                     } else {
                         if (j == 0) {
                             var destination = drone.startPosition;
-                            var startFrom = sensorList.get(i - 1).getCoordinate();
+                            var startFrom = sensorList.get(i - 1).getPosition();
                             distanceMatrix[i][j] = getEuclideanDistance(startFrom, destination);
                         } else {
-                            var startFrom = sensorList.get(i - 1).getCoordinate();
-                            var destination = sensorList.get(j - 1).getCoordinate();
+                            var startFrom = sensorList.get(i - 1).getPosition();
+                            var destination = sensorList.get(j - 1).getPosition();
                             distanceMatrix[i][j] = getEuclideanDistance(startFrom, destination);
                         }
                     }
@@ -198,7 +199,7 @@ public class App
     public static void insertIntoOrder(Sensor nextSensorToInclude) throws IOException, InterruptedException {
         var minimum = 0.0;
         //int count = 0;
-        Coordinate nodeN = nextSensorToInclude.getCoordinate();
+        Coordinate nodeN = nextSensorToInclude.getPosition();
         Coordinate nodeI = null;
         Coordinate nodeJ = null;
         
@@ -214,13 +215,13 @@ public class App
             if (i == 0) {
                 //System.out.println("Setting temporary nodes to start and sensor1");
                 temporaryNodeI = drone.startPosition;
-                temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
+                temporaryNodeJ = sensorsInOrder.get(i).getPosition();
             }
             // sensor1 --> sensor2, sensor2 --> sensor3 etc.
             else {
                 //System.out.println("Setting temporary nodes to sensorx and sensory, x = y - 1");
-                temporaryNodeI = sensorsInOrder.get(i-1).getCoordinate();
-                temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
+                temporaryNodeI = sensorsInOrder.get(i-1).getPosition();
+                temporaryNodeJ = sensorsInOrder.get(i).getPosition();
             }
 
             // Calculate d(I,N) + d(N,J) - d(I,J)
@@ -257,7 +258,7 @@ public class App
         } else {
             for (int j = 0; j < sensorsInOrder.size(); j++) {
                 // when you find sensor node I, add the new sensor node into the next index of sensorsInOrder
-                Coordinate node = sensorsInOrder.get(j).getCoordinate();
+                Coordinate node = sensorsInOrder.get(j).getPosition();
                 double nodeLatitude = node.latitude;
                 double nodeILatitude = nodeI.latitude;
                 //System.out.println(nodeLatitude == nodeILatitude);
@@ -287,11 +288,11 @@ public class App
             if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
                 var distance = 0.0;
-                var sensorNotAddedCoordinate = currentSensor.getCoordinate();
+                var sensorNotAddedCoordinate = currentSensor.getPosition();
                 // Calculate distance to each sensor in sensorsInOrder and save the shortest
                 for (int i = 0; i < sensorsInOrder.size(); i++) {
                     Sensor sensorAdded = sensorsInOrder.get(i);
-                    var coordinateAdded = sensorAdded.getCoordinate();
+                    var coordinateAdded = sensorAdded.getPosition();
                     distance = distanceMatrix[sensorList.indexOf(sensorAdded) + 1][ sensorList.indexOf(currentSensor) + 1];
                     if (i == 0) {
                         shortestDistance = distance;
@@ -305,15 +306,12 @@ public class App
                 distance = getEuclideanDistance(drone.startPosition, sensorNotAddedCoordinate);
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
-                   //System.out.println("closest to start");
                  }
-                //System.out.println("Sensor: " + currentSensor.getCoordinate().latitude + ", " + currentSensor.getCoordinate().longitude + " has shortest distance: " + shortestDistance);
                 sensorDistancePair.put(currentSensor, shortestDistance);
             }
         }
         // Get the sensor for which the minimum distance is the minimum of all sensors
         nextSensorToInclude = Collections.min(sensorDistancePair.entrySet(), Map.Entry.comparingByValue()).getKey();
-        //System.out.println("Next sensor to add into the path: " + nextSensorToInclude.getCoordinate().latitude + ", " + nextSensorToInclude.getCoordinate().longitude);
         return nextSensorToInclude;
     }
     
@@ -324,7 +322,7 @@ public class App
         // Create a Feature for every marker in sensor list
         for (Sensor sensor: drone.checkedSensors) {
             // Create a marker for that coordinate
-            Coordinate markerCoordinate = sensor.getCoordinate();
+            Coordinate markerCoordinate = sensor.getPosition();
             Point markerPoint = Point.fromLngLat(markerCoordinate.longitude, markerCoordinate.latitude);
             var markerGeometry = (Geometry) markerPoint;
             var markerFeature = Feature.fromGeometry(markerGeometry);
@@ -442,6 +440,8 @@ public class App
         
         var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThatDay = new Gson().fromJson(response.body(), listType);
+        System.out.println("Sensor list size: " + sensorsForThatDay.size());
+        System.out.println("Sensors are collected");
         return sensorsForThatDay;
     }
     

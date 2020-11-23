@@ -148,21 +148,21 @@ public class Drone {
 	            if (lineIntersect) {
 	                return true; // since the move involves intersecting a no fly zone
 	            }
-//	            if (lineIntersect) {
-//    	            System.out.println("Line Intersects: " + lineIntersect);
-//    	            System.out.println("Building Line -----");
-//    	            System.out.println(coordLine1A.latitude + "," + coordLine1A.longitude);
-//    	            System.out.println(coordLine1B.latitude + "," + coordLine1B.longitude);
-//    	            System.out.println("Drone Line ------");
-//    	            System.out.println(initialPosition.latitude + "," + initialPosition.longitude);
-//    	            System.out.println(currentPosition.latitude + "," + currentPosition.longitude);
-//	            }
+	            if (lineIntersect) {
+    	            System.out.println("Line Intersects: " + lineIntersect);
+    	            System.out.println("Building Line -----");
+    	            System.out.println(coordLine1A.latitude + "," + coordLine1A.longitude);
+    	            System.out.println(coordLine1B.latitude + "," + coordLine1B.longitude);
+    	            System.out.println("Drone Line ------");
+    	            System.out.println(initialPosition.latitude + "," + initialPosition.longitude);
+    	            System.out.println(currentPosition.latitude + "," + currentPosition.longitude);
+	            }
 	            //System.out.println(lineIntersect);
-	            List<Point> points = new ArrayList<Point>();
-	            points.add(line1A);
-	            points.add(line1B);
-	            LineString line = LineString.fromLngLats(points);
-	            App.buildingLines.add(line);
+//	            List<Point> points = new ArrayList<Point>();
+//	            points.add(line1A);
+//	            points.add(line1B);
+//	            LineString line = LineString.fromLngLats(points);
+//	            App.buildingLines.add(line);
 	        }
 	    }
 	    // None of the lines of the confinement zones intersected
@@ -260,7 +260,7 @@ public class Drone {
 	    Coordinate destination;
         if (sensors.size() != 0) {
             Sensor destinationSensor = sensors.get(0);
-            var sensorCoordinate = destinationSensor.getCoordinate();
+            var sensorCoordinate = destinationSensor.getPosition();
             destination = new Coordinate (sensorCoordinate.latitude, sensorCoordinate.longitude);
         } else {
             // There are no sensors left to visit
@@ -324,8 +324,8 @@ public class Drone {
 	 * Check if drone is within the range of the sensor (<0.0002 degrees)
 	 */
 	public boolean withinSensorRange(Sensor sensor) throws IOException, InterruptedException {
-	    var sensorLatitude = sensor.getCoordinate().latitude;
-	    var sensorLongitude = sensor.getCoordinate().longitude;
+	    var sensorLatitude = sensor.getPosition().latitude;
+	    var sensorLongitude = sensor.getPosition().longitude;
 	    var positionLatitude = this.currentPosition.latitude;
 	    var positionLongitude = this.currentPosition.longitude;
 	    return (calculateDistance(sensorLatitude, sensorLongitude, 
