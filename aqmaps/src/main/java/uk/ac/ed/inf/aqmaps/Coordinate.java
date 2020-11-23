@@ -78,7 +78,7 @@ public class Coordinate {
 	 * A useful function that represents the coordinate as a string
 	 */
 	public String toString() {
-	    return ("latitude: " + latitude + "     longitude: "  + longitude);
+	    return (latitude + ", "  + longitude);
 	}
 
 	/*

@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
 
 /**
  * The Drone class represents a Drone, with a position and number of 
@@ -79,11 +82,18 @@ public class Drone {
 	    this.moves -= 1;
 	    var initialLatitude = this.currentPosition.latitude;
 	    var initialLongitude = this.currentPosition.longitude;
+	    Coordinate initialPosition = new Coordinate(initialLatitude, initialLongitude);
 	    
 	    // Move the drone to next position
 	    this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
 	    boolean inNoFly = currentPosition.isInNoFlyZone();
 	    
+	    if (moveInterceptsNoFly(currentPosition, initialPosition)) {
+	        //goRoundNoFlyZone(initialLatitude, initialLongitude);
+	        System.out.println("Move Intercepts!");
+	    } else {
+	        System.out.println("Move doesn't Intercept");
+	    }
 	    //if (currentPosition.isInNoFlyZone()) {
 	    //    goRoundNoFlyZone(initialLatitude, initialLongitude);
 	    //}
@@ -111,7 +121,107 @@ public class Drone {
 	    currentPosition = new Coordinate(newLatitude, newLongitude);
 	}
 	
-	public void goRoundNoFlyZone(double initialLatitude, double initialLongitude) throws IOException, InterruptedException {
+	/*
+	 * A method to check if the line formed by the move goes into any No-Fly Zone
+	 */
+	private boolean moveInterceptsNoFly(Coordinate newPosition, Coordinate initialPosition) {
+	    // Get every line of a no-fly zone.
+	    for (Feature feature: App.noFlyZones) {
+	        Polygon polygon = (Polygon) feature.geometry();
+	        // Creates a list of all polygons
+	        List<List<Point>> coordinates = polygon.coordinates();
+	        List<Point> coordinateList = coordinates.get(0);
+	        
+	        for (Point point: coordinateList) {
+	            App.pointsInZones.add(point);
+	        }
+	        	        
+	        // Loop through and get each pair of coordinates
+	        for (int i = 0; i < coordinateList.size() - 1; i++) {
+	            Point line1A = coordinateList.get(i);
+	            Point line1B = coordinateList.get(i+1);
+	            Coordinate coordLine1A = new Coordinate(line1A.latitude(), line1A.longitude());
+	            Coordinate coordLine1B = new Coordinate(line1B.latitude(), line1B.longitude());
+	            
+	            // Pass the line and the drone line to the intersect function
+	            boolean lineIntersect = intersect(initialPosition, currentPosition, coordLine1A, coordLine1B);
+	            if (lineIntersect) {
+	                return true; // since the move involves intersecting a no fly zone
+	            }
+//	            if (lineIntersect) {
+//    	            System.out.println("Line Intersects: " + lineIntersect);
+//    	            System.out.println("Building Line -----");
+//    	            System.out.println(coordLine1A.latitude + "," + coordLine1A.longitude);
+//    	            System.out.println(coordLine1B.latitude + "," + coordLine1B.longitude);
+//    	            System.out.println("Drone Line ------");
+//    	            System.out.println(initialPosition.latitude + "," + initialPosition.longitude);
+//    	            System.out.println(currentPosition.latitude + "," + currentPosition.longitude);
+//	            }
+	            //System.out.println(lineIntersect);
+	            List<Point> points = new ArrayList<Point>();
+	            points.add(line1A);
+	            points.add(line1B);
+	            LineString line = LineString.fromLngLats(points);
+	            App.buildingLines.add(line);
+	        }
+	    }
+	    // None of the lines of the confinement zones intersected
+	    return false;
+    }
+
+    private boolean intersect(Coordinate initialPosition, Coordinate newPosition, Coordinate coordLine1A,
+            Coordinate coordLine1B) {
+        
+        // Coordinates for the line representing the drone's suggested movement
+        double X1 = initialPosition.longitude;
+        double Y1 = initialPosition.latitude;
+        double X2 = newPosition.longitude;
+        double Y2 = newPosition.latitude;
+        // Coordinates for the line representing the no fly zone
+        double X3 = coordLine1A.longitude;
+        double Y3 = coordLine1A.latitude;
+        double X4 = coordLine1B.longitude;
+        double Y4 = coordLine1B.latitude;
+       
+        // Check if there's an interval
+        if (Math.max(X1, X2) < Math.min(X3, X4)) {
+            // if there isn't a common x interval, return false as the lines can't intersect
+            return false;
+        }
+        
+        // f1(x) = m1x + c1 = y
+        // f2(x) = m2x + c2 = y
+        // Calculate A1, A2, b1, b2
+        double m1 = (Y1 - Y2) / ( X1 - X2);
+        double m2 = (Y3 - Y4) / (X3 - X4);
+        double c1 = Y1 - (m1 * X1);
+        double c2 = Y3 - (m2 * X3);
+        
+        // Check if the two lines are parallel
+        if (m1 == m2) {
+            return false; // the lines are parallel so don't intersect
+        }
+        
+        // A point (Xi, Yi) of intersection lying on both lines must fit both formulas
+        double Xi = (c2 - c1) / (m1 - m2);
+        double Yi1 = (m1 * Xi) + c1;
+        double Yi2 = (m2 * Xi) + c2;
+        if ( Yi1 == Yi2) {
+            // The point of intersection lies on both lines
+            
+            // Check that Xi is in the interval
+            if ( (Xi < Math.max(Math.min(X1,X2), Math.min(X3, X4))) 
+                    || (Xi > Math.min(Math.max(X1, X2), Math.max(X3, X4)))) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public void goRoundNoFlyZone(double initialLatitude, double initialLongitude) throws IOException, InterruptedException {
         // The drone has reached a no fly zone and must then go round the building and continue
 	    // along its path to its destination
 	    

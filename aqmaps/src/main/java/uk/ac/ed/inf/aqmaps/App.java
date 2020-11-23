@@ -42,6 +42,7 @@ public class App
     public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
     public static List<Point> destinations = new ArrayList<Point>();
     public static double[][] distanceMatrix = new double [34][34];
+    public static List<LineString> buildingLines = new ArrayList<LineString>();
     
     // for testing
     public static List<Point> pointsInZones = new ArrayList<>();
@@ -117,17 +118,17 @@ public class App
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
         // CHECKING -- PRINT THE NO FLY ZONES
-        for (Feature feature: noFlyZones) {
-            markerFeatures.add(feature);
-        }
-        // CHECKING -- PRINT OUT THE POSITION OF ANY POINTS IN BUILDINGS
-        if (pointsInZones.size() > 0) {
-            for (Point point : pointsInZones) {
-                var markerGeometry = (Geometry) point;
-                var markerFeature = Feature.fromGeometry(markerGeometry);
-                markerFeatures.add(markerFeature);
-            }   
-        }
+//        for (Feature feature: noFlyZones) {
+//            markerFeatures.add(feature);
+//        }
+//        // CHECKING -- PRINT OUT THE POSITION OF ANY POINTS IN BUILDINGS
+//        if (pointsInZones.size() > 0) {
+//            for (Point point : pointsInZones) {
+//                var markerGeometry = (Geometry) point;
+//                var markerFeature = Feature.fromGeometry(markerGeometry);
+//                markerFeatures.add(markerFeature);
+//            }   
+//        }
         
         // CHECKING -- PRINTING START LOCATION
 //        var pointStart = Point.fromLngLat(startLongitude, startLatitude);
@@ -142,6 +143,12 @@ public class App
 //        var pathGeometry = (Geometry) pathLine;
 //        var pathFeature = Feature.fromGeometry(pathGeometry);
 //        markerFeatures.add(pathFeature);
+        // CHECKING -- PRINT ALL NO FLY ONE EDGES
+        for (LineString line: buildingLines) {
+            Geometry geoLine = (Geometry) line;
+            Feature featureLine = Feature.fromGeometry(geoLine);
+            markerFeatures.add(featureLine);
+        }
         // CHECKING -- PRINTING LINESTRING FOR THE DRONE
         var pathLineDrone = LineString.fromLngLats(drone.route);
         var pathLineDroneGeometry = (Geometry) pathLineDrone;
