@@ -57,22 +57,22 @@ public class Coordinate {
 		return (permittedLatitude && permittedLongitude);
 	}
 	
-	/*
-	 * Check if the coordinate is in a forbidden zone
-	 */
-	public boolean isInNoFlyZone() {
-	    for (Feature feature: App.noFlyZones) {
-	        Polygon polygon = (Polygon) feature.geometry();
-	        Point point = Point.fromLngLat(this.longitude, this.latitude);
-	        boolean isInside = TurfJoins.inside(point, polygon);
-	        if (isInside) {
-	            System.out.println("Point is in no fly zone, adding to poinInZone");
-	            App.pointsInZones.add(point);
-	            return true;
-	        }
-	    }
-	    return false;
-	}
+//	/*
+//	 * Check if the coordinate is in a forbidden zone
+//	 */
+//	public boolean isInNoFlyZone() {
+//	    for (Feature feature: App.noFlyZones) {
+//	        Polygon polygon = (Polygon) feature.geometry();
+//	        Point point = Point.fromLngLat(this.longitude, this.latitude);
+//	        boolean isInside = TurfJoins.inside(point, polygon);
+//	        if (isInside) {
+//	            System.out.println("Point is in no fly zone, adding to poinInZone");
+//	            App.pointsInZones.add(point);
+//	            return true;
+//	        }
+//	    }
+//	    return false;
+//	}
 	
 	/*
 	 * A useful function that represents the coordinate as a string

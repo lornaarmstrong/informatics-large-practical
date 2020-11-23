@@ -17,7 +17,7 @@ import com.mapbox.geojson.Polygon;
 public class Drone {
 	
 	private Coordinate currentPosition;
-	public int moves;
+	public int moves = 150;
 	public Coordinate startPosition;
 	boolean returningToStart;
 	public final double moveLength = 0.0003;
@@ -29,7 +29,6 @@ public class Drone {
 	    this.currentPosition = startPosition;
 	    this.startPosition = startPosition;
 	    this.returningToStart = false;
-	    this.moves = 150;
 	}
 	
 	// Getters and Setters
@@ -43,10 +42,6 @@ public class Drone {
 	
 	public int getMoves() {
 		return this.moves;
-	}
-	
-	public void setMoves(int moves) {
-		this.moves = moves;
 	}
 	
 	public void setSensors(ArrayList<Sensor> sensors) {
@@ -86,7 +81,7 @@ public class Drone {
 	    
 	    // Move the drone to next position
 	    this.currentPosition = currentPosition.getNextPosition(direction, moveLength);
-	    boolean inNoFly = currentPosition.isInNoFlyZone();
+	    //boolean inNoFly = currentPosition.isInNoFlyZone();
 	    
 	    if (moveInterceptsNoFly(currentPosition, initialPosition)) {
 	        //goRoundNoFlyZone(initialLatitude, initialLongitude);

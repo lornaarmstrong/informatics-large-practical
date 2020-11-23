@@ -93,7 +93,6 @@ public class App
         System.out.println("Loop through all sensors and add them to the sensorsInOrder list");
         System.out.println("-----------------------------");
         while (sensorsInOrder.size() < sensorList.size()) {
-//            System.out.println("Number of sensors already in order: " + sensorsInOrder.size());
             var nextSensorToInclude = selectNearestSensor();
             insertIntoOrder(nextSensorToInclude);
         }
@@ -109,9 +108,7 @@ public class App
         idealRoute.add(startPoint);
         for (int i = 0; i < sensorsInOrder.size(); i++) {
             Sensor sensor = sensorsInOrder.get(i);
-            // Create a point containing the latitude and longitude associated with the What 3 Words location.
             Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
-            //Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
             idealRoute.add(sensorCoordinate);
         }
         idealRoute.add(startPoint);
@@ -145,11 +142,11 @@ public class App
 //        var pathFeature = Feature.fromGeometry(pathGeometry);
 //        markerFeatures.add(pathFeature);
         // CHECKING -- PRINT ALL NO FLY ONE EDGES
-        for (LineString line: buildingLines) {
-            Geometry geoLine = (Geometry) line;
-            Feature featureLine = Feature.fromGeometry(geoLine);
-            markerFeatures.add(featureLine);
-        }
+//        for (LineString line: buildingLines) {
+//            Geometry geoLine = (Geometry) line;
+//            Feature featureLine = Feature.fromGeometry(geoLine);
+//            markerFeatures.add(featureLine);
+//        }
         // CHECKING -- PRINTING LINESTRING FOR THE DRONE
         var pathLineDrone = LineString.fromLngLats(drone.route);
         var pathLineDroneGeometry = (Geometry) pathLineDrone;
@@ -157,6 +154,8 @@ public class App
         markerFeatures.add(pathFeatureDrone);
         var allMarkers = FeatureCollection.fromFeatures(markerFeatures);
         writeFile("sensorMap.geojson", allMarkers.toJson());
+        
+        System.out.println("Number of moves: " + (150 - drone.moves) );
 //        
 ////        // Create output files
 ////        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
@@ -440,8 +439,6 @@ public class App
         
         var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThatDay = new Gson().fromJson(response.body(), listType);
-        System.out.println("Sensor list size: " + sensorsForThatDay.size());
-        System.out.println("Sensors are collected");
         return sensorsForThatDay;
     }
     
@@ -449,7 +446,6 @@ public class App
      * Get the list of all polygons representing the buildings in the no-fly zone 
      */
     public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
-
         var client = HttpClient.newHttpClient();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
@@ -463,7 +459,7 @@ public class App
      * Write json to a given filename
      */
     public static void writeFile(String filename, String json) throws IOException {
-        System.out.println("Writing to file!");
+        System.out.println("Writing to file " + filename);
         BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
         try {
             writer.write(json);
