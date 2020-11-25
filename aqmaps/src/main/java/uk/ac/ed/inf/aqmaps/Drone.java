@@ -60,7 +60,28 @@ public class Drone {
 	        
 	        // Calculate the angle needed
 	        var direction = getDirection();
-	        System.out.println("Direction: " + direction);
+	        
+	        // Check if the move involves flying through a no-fly zone
+//	        Coordinate proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
+	        
+//	        // The proposed move involves flying through a no-fly zone and needs to be dealt with
+//	        if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)) {
+//	            // repeatedly try to
+//	        } else { // the drone can make the move
+//	            this.currentPosition = proposedNextPosition;
+//	            moves = moves - 1;
+//	            // track the point visited
+//	            var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
+//	            route.add(nextPoint);
+//	            // Check if this new position is in range of the destination sensor
+//	            if (sensors.size() > 0) {
+//	                Sensor sensor = sensors.get(0);
+//	                if (withinSensorRange(sensor)) {
+//	                    takeReading(sensor);
+//	                    sensors.remove(0);
+//	                }
+//	            }  
+//	        }
 	        
 	        // Make one move
 	        moveDrone(direction);
@@ -80,76 +101,109 @@ public class Drone {
 	 * Move the drone, update its position and add the new position coordinates to route
 	 */
 	public void moveDrone(int direction) throws IOException, InterruptedException {
-	    var initialLatitude = this.currentPosition.latitude;
-	    var initialLongitude = this.currentPosition.longitude;
-	    Coordinate initialPosition = new Coordinate(initialLatitude, initialLongitude);
-	    
+        //System.out.println("Move Drone. Direction: " + direction);
 	    // Check if the move involves flying through a no-fly zone
 	    Coordinate proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
-	    
+	    //System.out.println("Got proposedNextPosition.");
+	    //System.out.println("--------");
+	    //System.out.println("Next prop: " + proposedNextPosition);
+
 	    // Check if the move involves flying through a no-fly zone
-	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)) {            
-            proposedNextPosition = goRoundNoFlyZone(direction);
-	        //System.out.println("Move Intercepts No Fly Zone");
+	    //|| proposedNextPosition.isInNoFlyZone()
+	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition) || proposedNextPosition.isInNoFlyZone()) {   
+	        //System.out.println("oh no! Move interceps no fly zone. We need a new angle!");
+	        int newDirection = goAroundNoFlyZone(direction);
+	        //System.out.println("Got new direction. Let's try: " + newDirection);
+	        moveDrone(newDirection);
+	    } else {
+	        //System.out.println("Finally - an angle that works!");
+	        this.moves -= 1;
+	        this.currentPosition = proposedNextPosition;
+	        var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
+	        route.add(nextPoint);
+	        // Check if this new position is in range of the destination sensor
+	        if (sensors.size() > 0) {
+	            Sensor sensor = sensors.get(0);
+	            if (withinSensorRange(sensor)) {
+	                takeReading(sensor);
+	                sensors.remove(0);
+	            }
+	        }   
+	        
 	    }
 	    
-	    this.moves -= 1;
-	    this.currentPosition = proposedNextPosition;
-	    
-	    // Add the new position to the route
-	    var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
-	    route.add(nextPoint);
+//	    // Add the new position to the route
+//	    var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
+//	    route.add(nextPoint); 
 	    
 	    // Check if this new position is in range of the destination sensor
-	    if (sensors.size() > 0) {
-	        Sensor sensor = sensors.get(0);
-	        if (withinSensorRange(sensor)) {
-	            takeReading(sensor);
-	            sensors.remove(0);
-	        }
-	    }	    
+//	    if (sensors.size() > 0) {
+//	        Sensor sensor = sensors.get(0);
+//	        if (withinSensorRange(sensor)) {
+//	            takeReading(sensor);
+//	            sensors.remove(0);
+//	        }
+//	    }	    
 	}
 	
-	/*
+	private int goAroundNoFlyZone(int direction) {
+        // We know that the current direction doesn't work
+	    int newDirection = direction + 10;
+	    return newDirection;
+    }
+
+    /*
 	 * A method to check if the line formed by the move goes into any No-Fly Zone
 	 */
 	private boolean moveInterceptsNoFly(Coordinate newPosition, Coordinate initialPosition) {
+	    //System.out.println("--------------- moveInterceptsNoFly function -----------");
 	    // Get every line of a no-fly zone.
+	    List<Line> noFlyBoundaries = new ArrayList<>();
+	    
+	    // Adds every line that the drone cannot cross over
 	    for (Feature feature: App.noFlyZones) {
 	        Polygon polygon = (Polygon) feature.geometry();
-	        // Creates a list of all polygons
-	        List<List<Point>> coordinates = polygon.coordinates();
-	        List<Point> coordinateList = coordinates.get(0);
-	        	        
-	        // Loop through and get each pair of coordinates
+	        List<List<Point>> coordinateLists = polygon.coordinates();
+	        List<Point> coordinateList = coordinateLists.get(0);
 	        for (int i = 0; i < coordinateList.size() - 1; i++) {
-	            Point line1A = coordinateList.get(i);
-	            Point line1B = coordinateList.get(i+1);
-	            Coordinate coordLine1A = new Coordinate(line1A.latitude(), line1A.longitude());
-	            Coordinate coordLine1B = new Coordinate(line1B.latitude(), line1B.longitude());
-	            
-	            // Pass the line and the drone line to the intersect function
-	            boolean lineIntersect = intersect(initialPosition, newPosition, coordLine1A, coordLine1B);
-	            if (lineIntersect) {
-	                System.out.println("------------------------");
-    	            System.out.println("Line Intersects: " + lineIntersect);
-    	            System.out.println("Building Line -----");
-    	            System.out.println(coordLine1A.latitude + "," + coordLine1A.longitude);
-    	            System.out.println(coordLine1B.latitude + "," + coordLine1B.longitude);
-    	            System.out.println("Drone Line ------");
-    	            System.out.println(initialPosition.latitude + "," + initialPosition.longitude);
-    	            System.out.println(newPosition.latitude + "," + newPosition.longitude);
-    	            System.out.println("-----------------------");
-	            }
-	            if (lineIntersect) {
-	                return true; // since the move involves intersecting a no fly zone
-	            }
+	            Point pointA = coordinateList.get(i);
+	            Point pointB = coordinateList.get(i + 1);
+	            Coordinate coordA = new Coordinate(pointA.latitude(), pointA.longitude());
+                Coordinate coordB = new Coordinate(pointB.latitude(), pointB.longitude());
+	        
+	            Line line = new Line(coordA, coordB);
+	            noFlyBoundaries.add(line);
 	        }
 	    }
-	    // None of the lines of the confinement zones intersected
+	    
+	    // Print out all no fly lines
+//	    System.out.println(noFlyBoundaries.size());
+//	    System.out.println("LINES");
+//	    for (Line line : noFlyBoundaries) {
+//	        System.out.println(line.toString());
+//	    }
+	    
+	    //System.out.println("Number of No Fly Boundaries: " + noFlyBoundaries.size());
+	    
+	    // Check whether the two lines intersect for each one
+	    Line moveLine = new Line(newPosition, initialPosition);
+	    
+	    //boolean noIntersection = true;
+	    
+	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
+	        Line boundary = noFlyBoundaries.get(i);
+	        boolean intersects = intersect(newPosition, initialPosition, boundary.getPointA(), boundary.getPointB());
+	        if (intersects) {
+	            return true; // since the proposed move crosses a forbidden line
+	        }
+	    }
 	    return false;
     }
 
+	/*
+	 * Returns true if the line between initialPosition and newPosition intersects the line between coordLine1A
+	 * and coordLine1B, else false
+	 */
     private boolean intersect(Coordinate initialPosition, Coordinate newPosition, Coordinate coordLine1A,
             Coordinate coordLine1B) {
         
@@ -163,11 +217,15 @@ public class Drone {
         double Y3 = coordLine1A.latitude;
         double X4 = coordLine1B.longitude;
         double Y4 = coordLine1B.latitude;
+        
+        boolean result = false;
        
         // Check if there's an interval
         if (Math.max(X1, X2) < Math.min(X3, X4)) {
             // if there isn't a common x interval, return false as the lines can't intersect
-            return false;
+            //System.out.println("No common interval");
+            result = false;
+            //return false;
         }
         
         // f1(x) = m1x + c1 = y
@@ -180,7 +238,9 @@ public class Drone {
         
         // Check if the two lines are parallel
         if (m1 == m2) {
-            return false; // the lines are parallel so don't intersect
+            //System.out.println("Parallel Lines");
+            //return false; // the lines are parallel so don't intersect
+            result = false;
         }
         
         // A point (Xi, Yi) of intersection lying on both lines must fit both formulas
@@ -188,46 +248,47 @@ public class Drone {
         double Yi1 = (m1 * Xi) + c1;
         double Yi2 = (m2 * Xi) + c2;
         if ( Yi1 == Yi2) {
-            // The point of intersection lies on both lineserin mcgrath
+            // The point of intersection lies on both lines are in mcgrath
             
             // Check that Xi is in the interval
-            if ( (Xi < Math.max(Math.min(X1,X2), Math.min(X3, X4))) 
+            if ((Xi < Math.max(Math.min(X1,X2), Math.min(X3, X4))) 
                     || (Xi > Math.min(Math.max(X1, X2), Math.max(X3, X4)))) {
-                return false;
+                result = false;
             } else {
-                //System.out.println("INTERSECTS : TRUE " + Yi1 + ", " + Xi);
-                return true;
+                result = true;
             }
         }
         
-        return false;
+        //return false;
+        return result;
     }
 
     /*
      * Return the coordinate that the drone has now moved to, where the coordinate is not in a noFlyZone
      */
-    public Coordinate goRoundNoFlyZone(int moveAngle) throws IOException, InterruptedException {
-	    
-	    // Get the coordinates of the destination the drone is aiming for
-        var destination = getDestination();
-        System.out.println("Drone's Position: " + this.currentPosition.latitude + ", " + this.currentPosition.longitude);
-        System.out.println("Destination: " + destination.getLatitude() + "," + destination.getLongitude());
-        System.out.println("Previous Angle: " + moveAngle);
-        System.out.println("--- Going Round No Fly Zone ---");
-        boolean go = true;
-        while(go) {
-            moveAngle -= 10;
-            System.out.println(moveAngle);
-            // find the next position using this angle
-            Coordinate nextPosition = this.currentPosition.getNextPosition(moveAngle, moveLength);
-            if (!moveInterceptsNoFly(nextPosition, this.currentPosition)) {
-                // Break the while loop
-                System.out.println("The move now doesn't intersect at position: " + nextPosition.getLatitude() + ", " + nextPosition.getLongitude());
-                return (nextPosition);
-            }
-        }
-        return null;
-    }
+//    public Coordinate goRoundNoFlyZone(int moveAngle) throws IOException, InterruptedException {
+//	    
+//	    // Get the coordinates of the destination the drone is aiming for
+//        var destination = getDestination();
+//        System.out.println("Drone's Position: " + this.currentPosition.latitude + ", " + this.currentPosition.longitude);
+//        System.out.println("Destination: " + destination.getLatitude() + "," + destination.getLongitude());
+//        System.out.println("Previous Angle: " + moveAngle);
+//        System.out.println("--- Going Round No Fly Zone ---");
+//        boolean go = true;
+//        while(go) {
+//            moveAngle -= 10;
+//            System.out.println(moveAngle);
+//            // find the next position using this angle
+//            Coordinate nextPosition = this.currentPosition.getNextPosition(moveAngle, moveLength);
+//            System.out.println("Next Position: " + nextPosition.toString());
+//            if (!moveInterceptsNoFly(nextPosition, this.currentPosition)) {
+//                // Break the while loop
+//                System.out.println("The move now doesn't intersect at position: " + nextPosition.getLatitude() + ", " + nextPosition.getLongitude());
+//                return (nextPosition);
+//            }
+//        }
+//        return null;
+//    }
 
     /*
 	 * Take the sensor reading of battery percentage and air quality reading
@@ -238,7 +299,7 @@ public class Drone {
 	    var sensorLocation = sensor.getLocation();
 	    var sensorReading = sensor.getReading();
 	    Sensor checkedSensor = new Sensor(sensorLocation, sensorBatteryLevel, sensorReading);
-	    System.out.println("Reading Taken: " + sensorLocation + " " + sensorBatteryLevel + " " + sensorReading);
+	    //System.out.println("Reading Taken: " + sensorLocation + " " + sensorBatteryLevel + " " + sensorReading);
 	    
 	    // TODO fix this problem as it only wokrs when you add the sensor, not checkedSensor
 	    checkedSensors.add(sensor);

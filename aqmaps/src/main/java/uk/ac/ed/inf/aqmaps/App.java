@@ -7,7 +7,6 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
-import com.mapbox.geojson.Polygon;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -18,7 +17,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,14 +28,13 @@ import java.util.Map;
  */
 public class App 
 {
-    // Initialise Variables
     public static List<Sensor> sensorList = new ArrayList<Sensor>(); // list of all sensors to be visited in the day
     public static ArrayList<Sensor> sensorsInOrder = new ArrayList<Sensor>(); // list of all sensors in the order they should be visited
     public static List<Feature> noFlyZones; // areas the drone cannot fly into
     public static int portNumber;
     public static Drone drone;
-    public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
-    public static double[][] distanceMatrix = new double [9][9];
+//    public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
+    public static double[][] distanceMatrix = new double [10][10];
     public static List<LineString> buildingLines = new ArrayList<LineString>();
     
     // for testing
@@ -55,16 +52,14 @@ public class App
         
         // TODO add input validation / checks
         
-        // Get the list of sensors and no-fly zones
+        // Get the list of sensors and no-fly zones from the server
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
-        sensorList = sensorsForTheDay.subList(0, 8); // to ensure only 33 sensors are checked        
+        sensorList = sensorsForTheDay.subList(0, 9); // to ensure only 33 sensors are checked        
         FeatureCollection noFlyZoneList = getNoFlyZoneList();
         
-        // Get the latitude and longitude values of each sensor using the server
+        // Get the latitude and longitude values of each sensor using the server and store
         for (Sensor sensor: sensorList) {
             sensor.translateWhat3Words();
-//            var position = sensor.getPosition();
-//            System.out.println("Sensor:" + position.getLatitude() + "," + position.getLongitude());
         }
         
         // Breaking the no fly zones into polygons
@@ -78,23 +73,15 @@ public class App
         // Create the drone's starting point and drone instance
         Coordinate startPosition = new Coordinate(startLatitude, startLongitude);
         drone = new Drone(startPosition);
-        Point startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
-        System.out.println("Drone start: " + drone.startPosition.latitude + ", " + drone.startPosition.longitude);
+//        Point startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
+//        System.out.println("Drone start: " + drone.startPosition.latitude + ", " + drone.startPosition.longitude);
 
         calculateDistanceMatrix();
-        // CHECKING -- print out distance matrix
-//        for (int i = 0; i < distanceMatrix.length; i++) {
-//            System.out.println(Arrays.toString(distanceMatrix[i]));
-//        }
-//        
        
         // Find nearest node J, move to it, and build the partial tour (I, J)
         Sensor nearestSensor = findNearestSensor(startPosition);
-//        System.out.println("Nearest Node: " + nearestSensor.getPosition().toString());
         sensorsInOrder.add(nearestSensor);
        
-        System.out.println("Loop through all sensors and add them to the sensorsInOrder list");
-        System.out.println("-----------------------------");
         while (sensorsInOrder.size() < sensorList.size()) {
             // checked and this works!
             var nextSensorToInclude = selectNearestSensor();
@@ -106,14 +93,14 @@ public class App
         drone.startRoute(); // starts the route by adding the start point
         drone.visitSensors();
         
-        // The 'expected' route (calculated using Nearest Insertion)
-        idealRoute.add(startPoint);
-        for (int i = 0; i < sensorsInOrder.size(); i++) {
-            Sensor sensor = sensorsInOrder.get(i);
-            Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
-            idealRoute.add(sensorCoordinate);
-        }
-        idealRoute.add(startPoint);
+//        // The 'expected' route (calculated using Nearest Insertion)
+//        idealRoute.add(startPoint);
+//        for (int i = 0; i < sensorsInOrder.size(); i++) {
+//            Sensor sensor = sensorsInOrder.get(i);
+//            Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
+//            idealRoute.add(sensorCoordinate);
+//        }
+//        idealRoute.add(startPoint);
         
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
@@ -150,13 +137,13 @@ public class App
 //            markerFeatures.add(featureLine);
 //        }
         // CHECKING -- PRINT ALL SENSORS
-        for (Sensor sensor: sensorList) {
-            Point sensorPoint = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
-            var markerGeometry = (Geometry) sensorPoint;
-            var markerFeature = Feature.fromGeometry(markerGeometry);
-            markerFeature.addStringProperty("marker-color", "#0000FF");
-            markerFeatures.add(markerFeature);
-        }
+//        for (Sensor sensor: sensorList) {
+//            Point sensorPoint = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
+//            var markerGeometry = (Geometry) sensorPoint;
+//            var markerFeature = Feature.fromGeometry(markerGeometry);
+//            markerFeature.addStringProperty("marker-color", "#0000FF");
+//            markerFeatures.add(markerFeature);
+//        }
         // CHECKING -- PRINTING LINESTRING FOR THE DRONE
         var pathLineDrone = LineString.fromLngLats(drone.route);
         var pathLineDroneGeometry = (Geometry) pathLineDrone;
@@ -166,12 +153,28 @@ public class App
         writeFile("sensorMap.geojson", allMarkers.toJson());
         
         System.out.println("Number of moves: " + (150 - drone.moves) );
-//        
-////        // Create output files
-////        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
-////        PrintWriter writer = new PrintWriter(flightpathFile, "UTF-8");
-////        String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
-////        PrintWriter geoWriter = new PrintWriter(readingsFile, "UTF-8");
+        
+        
+        // Sensors and drone path for readings file
+        var features = createMarkers();
+        var dronePathLine = LineString.fromLngLats(drone.route);
+        var dronePathGeometry = (Geometry) pathLineDrone;
+        var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
+        features.add(dronePathFeature);
+        var allFeatures = FeatureCollection.fromFeatures(features);
+        
+        // Output Files
+        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
+        String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
+        
+        // Flightpath
+        for (int i = 1; i < drone.route.size(); i ++) {
+            //
+        }
+        
+        // GeoJSON
+        writeFile(readingsFile, allFeatures.toJson());
+        
     }
     
     public static void calculateDistanceMatrix() throws IOException, InterruptedException {
@@ -215,7 +218,7 @@ public class App
         Coordinate nodeI = null;
         Coordinate nodeJ = null;
         
-//        System.out.println("Number of Sensors In Order: " + sensorsInOrder.size());
+        //System.out.println("Number of Sensors In Order: " + sensorsInOrder.size());
         for (int i = 0; i < sensorsInOrder.size(); i ++) {
 //            System.out.println("I: " + i);
             int count = 0;
@@ -239,14 +242,7 @@ public class App
             var distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
             var distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
             var distanceNJ = getEuclideanDistance(nodeN, temporaryNodeJ);
-//            System.out.println("DistanceIJ: " + distanceIJ);
-//            System.out.println("DistanceIN: " + distanceIN);
-//            System.out.println("DistanceNJ: " + distanceNJ);
             var formulaResult = distanceIN + distanceNJ - distanceIJ;
-//            System.out.println("-----");
-//            System.out.println("TemporaryNodeI: " + temporaryNodeI.toString());
-//            System.out.println("TemporaryNodeJ: " + temporaryNodeJ.toString());
-//            System.out.println("Formula result: " + formulaResult);
             
             // If this is the first distance we have checked, update the minimum
             // because it's the only distance so must be the smallest checked yet distance
@@ -277,16 +273,7 @@ public class App
                 // to make it between i and j
                 Coordinate node = sensorsInOrder.get(j).getPosition();
                 if (node.latitude == nodeI.latitude && node.longitude == nodeI.longitude) {
-//                    System.out.println("Inserting sensor into position: " + (j+1));
                     sensorsInOrder.add(j+1, nextSensorToInclude);
-                    
-//                    //Print all sensors in Path
-//                    System.out.println("Sensors in Path:  ----------");
-//                    for (Sensor sensor: sensorsInOrder) {
-//                        System.out.println(sensor.getPosition().toString());
-//                    }
-//                    System.out.println("-------");
-                    
                     break;
                 }
             }
@@ -309,6 +296,8 @@ public class App
         
         for (Sensor currentSensor: sensorList) {
             if (!sensorsInOrder.contains(currentSensor)) {
+//                System.out.println("Sensors in order doesn't already contain: " + currentSensor.getLocation());
+//                System.out.println("Sensors in order:" + sensorsInOrder.get(0).getLocation());
                 var shortestDistance = 0.0;
                 var distance = 0.0;
                 var sensorNotAddedCoordinate = currentSensor.getPosition();
@@ -422,17 +411,16 @@ public class App
         var shortestDistance = 0.0;
         Sensor nextNode = null; // default to null
         var counter = 0;
-        
         for (int i = 0; i < distanceMatrix.length - 1; i++) {
             var distance = distanceMatrix[0][i + 1];
             if (counter == 0) {
                 shortestDistance = distance;
+                nextNode = sensorList.get(i);
             }
             if (distance < shortestDistance) {
                 shortestDistance = distance;
                 nextNode = sensorList.get(i);
             }
-            counter++;
         }
         return nextNode;
     }

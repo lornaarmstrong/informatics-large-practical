@@ -1,5 +1,10 @@
 package uk.ac.ed.inf.aqmaps;
 
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
+import com.mapbox.turf.*;
+
 /**
  * Coordinate class, as pairs of latitude and longitude values
  *
@@ -68,5 +73,20 @@ public class Coordinate {
         Double yValue = moveLength * Math.sin(radians);
         updatedPosition = new Coordinate(this.latitude + yValue, this.longitude + xValue);
         return updatedPosition;
+    }
+    
+    /*
+     * Check if the coordinate is in a forbidden zone
+     */
+    public boolean isInNoFlyZone() {
+        for (Feature feature: App.noFlyZones) {
+            Polygon polygon = (Polygon) feature.geometry();
+            Point point = Point.fromLngLat(this.longitude, this.latitude);
+            boolean isInside = TurfJoins.inside(point, polygon);
+            if (isInside) {
+                return true;
+            }
+        }
+        return false;
     }
 }
