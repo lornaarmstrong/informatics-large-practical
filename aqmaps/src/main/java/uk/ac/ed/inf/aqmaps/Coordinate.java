@@ -1,10 +1,5 @@
 package uk.ac.ed.inf.aqmaps;
 
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.Point;
-import com.mapbox.geojson.Polygon;
-import com.mapbox.turf.*;
-
 /**
  * Coordinate class, as pairs of latitude and longitude values
  *
@@ -50,29 +45,10 @@ public class Coordinate {
 	public boolean isInConfinementZone() {
 		boolean permittedLatitude;
 		boolean permittedLongitude;
-		
 		permittedLatitude = 55.942617 < latitude && latitude < 55.946233;
 		permittedLongitude = -3.192473 < longitude && longitude < -3.184319;
-		
 		return (permittedLatitude && permittedLongitude);
 	}
-	
-//	/*
-//	 * Check if the coordinate is in a forbidden zone
-//	 */
-//	public boolean isInNoFlyZone() {
-//	    for (Feature feature: App.noFlyZones) {
-//	        Polygon polygon = (Polygon) feature.geometry();
-//	        Point point = Point.fromLngLat(this.longitude, this.latitude);
-//	        boolean isInside = TurfJoins.inside(point, polygon);
-//	        if (isInside) {
-//	            System.out.println("Point is in no fly zone, adding to poinInZone");
-//	            App.pointsInZones.add(point);
-//	            return true;
-//	        }
-//	    }
-//	    return false;
-//	}
 	
 	/*
 	 * A useful function that represents the coordinate as a string
