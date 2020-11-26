@@ -5,7 +5,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 
 import com.google.gson.Gson;
-import com.mapbox.geojson.Point;
 
 import java.io.IOException;
 import java.net.URI;
