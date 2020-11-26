@@ -63,12 +63,11 @@ public class Sensor {
 	
 	/*
 	 *  Find the latitude and longitude for the what3words location, returned as a Coordinate
+	 *  using the server.
 	 */
 	public void translateWhat3Words() throws IOException, InterruptedException {
-	        // Split the what3words into the 3 separate words
 	        var words = location.split("\\.");
 	    
-	        // Send a GET request to the server to get the what3words details
 	        var client = HttpClient.newHttpClient();
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create("http://localhost:" + App.portNumber + "/words/" + words[0] + "/" 
@@ -78,7 +77,7 @@ public class Sensor {
 	        // Check the response.statusCode()
 	        int statusCode = response.statusCode();
 	        if (statusCode == 200) {
-	            // Get the latitude and longitude and make it a Coordinate
+	            // Get the latitude and longitude and make it a LngLat
 	            var word = new Gson().fromJson(response.body(), Word.class);
 	            // Get the coordinates of the location
 	            var longitude = word.getCoordinates().getLng();
@@ -91,7 +90,6 @@ public class Sensor {
 	            // There is an error with the request
 	            System.out.println("The server cannot find the requested resource [error 404]");
 	        } else {
-	            // For other server status codes
 	            System.out.println("The status code is " + statusCode);
 	    }
 	}
