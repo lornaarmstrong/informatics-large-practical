@@ -1,12 +1,11 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Drone class represents a Drone, with a position and number of 
@@ -192,7 +191,7 @@ public class Drone {
 	    
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        Line boundary = noFlyBoundaries.get(i);
-	        boolean intersects = intersect(newPosition, initialPosition, boundary.getPointA(), boundary.getPointB());
+	        boolean intersects = intersect(newPosition, initialPosition, boundary.getCoordinateA(), boundary.getCoordinateB());
 	        if (intersects) {
 	            return true; // since the proposed move crosses a forbidden line
 	        }
