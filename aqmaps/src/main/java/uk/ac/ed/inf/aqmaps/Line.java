@@ -2,7 +2,7 @@ package uk.ac.ed.inf.aqmaps;
 
 /**
  * This class represents objects as Lines, with two sets
- * coordinates
+ * coordinates (one for each end of the line)
  */
 public class Line {
 
