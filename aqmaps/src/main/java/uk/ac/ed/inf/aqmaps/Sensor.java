@@ -17,7 +17,6 @@ import java.net.URI;
 public class Sensor {
 	
 	private String location;
-	// latitude and longitude?
 	private Coordinate position;
 	private double battery;
 	private String reading;
