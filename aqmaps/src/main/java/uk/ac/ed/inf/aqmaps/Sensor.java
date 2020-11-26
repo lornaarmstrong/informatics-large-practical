@@ -63,7 +63,7 @@ public class Sensor {
 	
 	/*
 	 *  Find the latitude and longitude for the what3words location, returned as a Coordinate
-	 *  using the server.
+	 *  using the server, and update the position attribute to be this Coordinate.
 	 */
 	public void translateWhat3Words() throws IOException, InterruptedException {
 	        var words = location.split("\\.");
@@ -75,7 +75,7 @@ public class Sensor {
         		    .build();
 	        var response = client.send(request, BodyHandlers.ofString());
 	        // Check the response.statusCode()
-	        int statusCode = response.statusCode();
+	        var statusCode = response.statusCode();
 	        if (statusCode == 200) {
 	            // Get the latitude and longitude and make it a LngLat
 	            var word = new Gson().fromJson(response.body(), Word.class);
