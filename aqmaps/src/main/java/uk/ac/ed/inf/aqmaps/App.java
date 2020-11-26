@@ -34,7 +34,7 @@ public class App
     public static int portNumber;
     public static Drone drone;
 //    public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
-    public static double[][] distanceMatrix = new double [10][10];
+    public static double[][] distanceMatrix = new double [34][34];
     public static List<LineString> buildingLines = new ArrayList<LineString>();
     
     // for testing
@@ -54,7 +54,7 @@ public class App
         
         // Get the list of sensors and no-fly zones from the server
         List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
-        sensorList = sensorsForTheDay.subList(0, 9); // to ensure only 33 sensors are checked        
+        sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked        
         FeatureCollection noFlyZoneList = getNoFlyZoneList();
         
         // Get the latitude and longitude values of each sensor using the server and store
@@ -64,17 +64,12 @@ public class App
         
         // Breaking the no fly zones into polygons
         noFlyZones = noFlyZoneList.features();
-//        for (Feature noFlyZoneFeature: noFlyFeatureList) {
-//            Geometry noFlyZoneGeometry = noFlyZoneFeature.geometry();
-//            Polygon noFlyZonePolygon = (Polygon) noFlyZoneGeometry;
-//            noFlyPolygons.add(noFlyZonePolygon);
-//        }
         
         // Create the drone's starting point and drone instance
         Coordinate startPosition = new Coordinate(startLatitude, startLongitude);
         drone = new Drone(startPosition);
-//        Point startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
-//        System.out.println("Drone start: " + drone.startPosition.latitude + ", " + drone.startPosition.longitude);
+        Point startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
+        System.out.println("Drone start: " + drone.startPosition.latitude + ", " + drone.startPosition.longitude);
 
         calculateDistanceMatrix();
        
@@ -175,6 +170,8 @@ public class App
         // GeoJSON
         writeFile(readingsFile, allFeatures.toJson());
         
+//        drone.testing();
+//        
     }
     
     public static void calculateDistanceMatrix() throws IOException, InterruptedException {
@@ -296,8 +293,6 @@ public class App
         
         for (Sensor currentSensor: sensorList) {
             if (!sensorsInOrder.contains(currentSensor)) {
-//                System.out.println("Sensors in order doesn't already contain: " + currentSensor.getLocation());
-//                System.out.println("Sensors in order:" + sensorsInOrder.get(0).getLocation());
                 var shortestDistance = 0.0;
                 var distance = 0.0;
                 var sensorNotAddedCoordinate = currentSensor.getPosition();
@@ -323,8 +318,6 @@ public class App
         }
         // Get the sensor for which the minimum distance is the minimum of all sensors
         nextSensorToInclude = Collections.min(sensorDistancePair.entrySet(), Map.Entry.comparingByValue()).getKey();
-        
-//        System.out.println("Next sensor to include: " + nextSensorToInclude.getPosition().toString());
         return nextSensorToInclude;
     }
     
