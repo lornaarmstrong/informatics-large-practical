@@ -38,15 +38,15 @@ public class Sensor {
         return this.position;
     }
     
-    public void setPosition(double latitude, double longitude) {
-        this.position = new Coordinate(latitude, longitude);
+    public void setPosition(Coordinate position) {
+        this.position = position;
     }
 	
 	public double getBattery() {
 		return this.battery;
 	}
 	
-	public void setBattery(Double battery) {
+	public void setBattery(double battery) {
 		this.battery = battery;
 	}
 	
@@ -80,8 +80,9 @@ public class Sensor {
 	            var longitude = word.getCoordinates().getLng();
                 var latitude = word.getCoordinates().getLat();
                 
-                // Add the latitude and longitude to the sensor
-                setPosition(latitude, longitude);
+                // Add the position to the sensor
+                var coordinate = new Coordinate(latitude, longitude);
+                setPosition(coordinate);
 
 	        } else if (statusCode == 404){
 	            // There is an error with the request
