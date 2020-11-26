@@ -79,11 +79,9 @@ public class Sensor {
 	            // Get the coordinates of the location
 	            var longitude = word.getCoordinates().getLng();
                 var latitude = word.getCoordinates().getLat();
-                
                 // Add the position to the sensor
                 var coordinate = new Coordinate(latitude, longitude);
                 setPosition(coordinate);
-
 	        } else if (statusCode == 404){
 	            // There is an error with the request
 	            System.out.println("The server cannot find the requested resource [error 404]");
