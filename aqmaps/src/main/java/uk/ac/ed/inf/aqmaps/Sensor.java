@@ -64,14 +64,13 @@ public class Sensor {
 	 */
 	public void translateWhat3Words() throws IOException, InterruptedException {
 	        var words = location.split("\\.");
-	    
 	        var client = HttpClient.newHttpClient();
 	        HttpRequest request = HttpRequest.newBuilder()
 	                .uri(URI.create("http://localhost:" + App.portNumber + "/words/" + words[0] + "/" 
 	                     + words[1] + "/" + words[2] + "/details.json"))
         		    .build();
 	        var response = client.send(request, BodyHandlers.ofString());
-	        // Check the response.statusCode()
+	        // Check the response status code()
 	        var statusCode = response.statusCode();
 	        if (statusCode == 200) {
 	            // Get the latitude and longitude and make it a LngLat
@@ -86,6 +85,7 @@ public class Sensor {
 	            // There is an error with the request
 	            System.out.println("The server cannot find the requested resource [error 404]");
 	        } else {
+	            // The status code is something else
 	            System.out.println("The status code is " + statusCode);
 	    }
 	}
