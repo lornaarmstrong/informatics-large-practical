@@ -85,7 +85,7 @@ public class Sensor {
 	            // There is an error with the request
 	            System.out.println("The server cannot find the requested resource [error 404]");
 	        } else {
-	            // The status code is something else
+	            // The status code is different
 	            System.out.println("The status code is " + statusCode);
 	    }
 	}

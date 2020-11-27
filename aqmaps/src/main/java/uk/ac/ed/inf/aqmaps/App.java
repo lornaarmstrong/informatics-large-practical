@@ -33,6 +33,7 @@ public class App
     public static List<Feature> noFlyZones; // areas the drone cannot fly into
     public static int portNumber;
     public static Drone drone;
+    public static List<String> flightpathInformation = new ArrayList<String>();
 //    public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
     public static double[][] distanceMatrix = new double [34][34];
     public static List<LineString> buildingLines = new ArrayList<LineString>();
@@ -145,15 +146,14 @@ public class App
         var pathFeatureDrone = Feature.fromGeometry(pathLineDroneGeometry);
         markerFeatures.add(pathFeatureDrone);
         var allMarkers = FeatureCollection.fromFeatures(markerFeatures);
-        writeFile("sensorMap.geojson", allMarkers.toJson());
+        writeJsonFile("sensorMap.geojson", allMarkers.toJson());
         
         System.out.println("Number of moves: " + (150 - drone.moves) );
-        
         
         // Sensors and drone path for readings file
         var features = createMarkers();
         var dronePathLine = LineString.fromLngLats(drone.route);
-        var dronePathGeometry = (Geometry) pathLineDrone;
+        var dronePathGeometry = (Geometry) dronePathLine;
         var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
         features.add(dronePathFeature);
         var allFeatures = FeatureCollection.fromFeatures(features);
@@ -162,16 +162,18 @@ public class App
         String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
         String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
         
-        // Flightpath
-        for (int i = 1; i < drone.route.size(); i ++) {
-            //
+        
+        FileWriter fileWriter = new FileWriter(flightpathFile);
+        for (int i = 0; i < flightpathInformation.size(); i ++) {
+            fileWriter.write( (i+1) + "," + flightpathInformation.get(i) + "\n");
         }
+        fileWriter.close();
+        
+        drone.testing();
         
         // GeoJSON
-        writeFile(readingsFile, allFeatures.toJson());
-        
-//        drone.testing();
-//        
+        writeJsonFile(readingsFile, allFeatures.toJson());
+      
     }
     
     public static void calculateDistanceMatrix() throws IOException, InterruptedException {
@@ -464,7 +466,7 @@ public class App
     /*
      * Write json to a given filename
      */
-    public static void writeFile(String filename, String json) throws IOException {
+    public static void writeJsonFile(String filename, String json) throws IOException {
         System.out.println("Writing to file " + filename);
         BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
         try {

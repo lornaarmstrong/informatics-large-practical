@@ -84,56 +84,60 @@ public class Drone {
 	    }
 	}
 	
-//	public void testing() {
-//	    var noFlyBoundaries = new ArrayList<Line>();
-//        for (Feature feature: App.noFlyZones) {
-//            var polygon = (Polygon) feature.geometry();
-//            var coordinateLists = polygon.coordinates();
-//            var coordinateList = coordinateLists.get(0);
-//            for (int i = 0; i < coordinateList.size() - 1; i++) {
-//                var  pointA = coordinateList.get(i);
-//                var pointB = coordinateList.get(i + 1);
-//                var coordA = new Coordinate(pointA.latitude(), pointA.longitude());
-//                var coordB = new Coordinate(pointB.latitude(), pointB.longitude());
-//                var line = new Line(coordA, coordB);
-//                noFlyBoundaries.add(line);
-//            }
-//        }
-//        
-//	    Coordinate dronePos = new Coordinate(55.94524637980763, -3.1880390932053637);
-//	    Coordinate droneNewPos = dronePos.getNextPosition(90, 0.0003);
-//	    System.out.println("Drone New Pos: " + droneNewPos.toString());
-//	    
-//	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
-//            var boundary = noFlyBoundaries.get(i);
-//            var intersects = intersect(droneNewPos, dronePos, boundary.getCoordinateA(), boundary.getCoordinateB());
-//            if (intersects) {
-//                System.out.println("Drone: " + droneNewPos.toString() + " " + dronePos);
-//                System.out.println("Boundary: " + boundary.getCoordinateA().toString() + ", " + boundary.getCoordinateB().toString());
-//                System.out.println("Intersect = true");
-//                System.out.println("--------");
-//                //System.out.println("Intersects: " + );
-//                //return true; // since the proposed move crosses a forbidden line
-//            } else {
-//                System.out.println("Drone: " + droneNewPos.toString() + " " + dronePos);
-//                System.out.println("Boundary: " + boundary.getCoordinateA().toString() + ", " + boundary.getCoordinateB().toString());
-//                System.out.println("Intersect = false");
-//                System.out.println("-------");
-//            }
-//        }
-//	    
-//	}
+	public void testing() {
+	    var noFlyBoundaries = new ArrayList<Line>();
+        for (Feature feature: App.noFlyZones) {
+            var polygon = (Polygon) feature.geometry();
+            var coordinateLists = polygon.coordinates();
+            var coordinateList = coordinateLists.get(0);
+            for (int i = 0; i < coordinateList.size() - 1; i++) {
+                var  pointA = coordinateList.get(i);
+                var pointB = coordinateList.get(i + 1);
+                var coordA = new Coordinate(pointA.latitude(), pointA.longitude());
+                var coordB = new Coordinate(pointB.latitude(), pointB.longitude());
+                var line = new Line(coordA, coordB);
+                noFlyBoundaries.add(line);
+            }
+        }
+        //System.out.println(noFlyBoundaries.size());
+	    Coordinate dronePos = new Coordinate(55.94423926992553,-3.187132842309832);
+	    Coordinate droneNewPos = dronePos.getNextPosition(80, 0.0003);
+	    System.out.println("Drone New Pos: " + droneNewPos.toString());
+	    
+	    var moveLine = new Line(dronePos, droneNewPos);
+	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
+            var boundary = noFlyBoundaries.get(i);
+           // var intersects = intersect(droneNewPos, dronePos, boundary.getCoordinateA(), boundary.getCoordinateB());
+            var intersects  = moveLine.isIntersecting(boundary);
+            if (intersects) {
+                System.out.println("Drone: " + droneNewPos.toString() + " " + dronePos);
+                System.out.println("Boundary: " + boundary.getCoordinateA().toString() + ", " + boundary.getCoordinateB().toString());
+                System.out.println("Intersect = true");
+                System.out.println("--------");
+            } else {
+                System.out.println("Drone: " + droneNewPos.toString() + " " + dronePos);
+                System.out.println("Boundary: " + boundary.getCoordinateA().toString() + ", " + boundary.getCoordinateB().toString());
+                System.out.println("Intersect = false");
+                System.out.println("-------");
+            }
+        }
+	    
+	}
 	
 	/*
 	 * Move the drone, update its position and add the new position coordinates to route
 	 */
 	public void moveDrone(int direction) throws IOException, InterruptedException {
 	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
-	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition) || proposedNextPosition.isInNoFlyZone()) {   
+	    var readingTaken = false;
+	    
+	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)  || proposedNextPosition.isInNoFlyZone()) {   
 	        var newDirection = getNewAngleClockwise(direction);
-	        //System.out.println("Direction " + direction);
 	        moveDrone(newDirection);
 	    } else {
+            var flightPath = currentPosition.longitude + "," + currentPosition.latitude + ","
+                    + direction + "," + proposedNextPosition.longitude + "," 
+                    + proposedNextPosition.latitude;
 	        this.moves -= 1;
 	        this.currentPosition = proposedNextPosition;
 	        var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
@@ -143,10 +147,18 @@ public class Drone {
 	            var sensor = sensors.get(0);
 	            if (withinSensorRange(sensor)) {
 	                takeReading(sensor);
+	                flightPath += "," + sensor.getLocation();
+	                readingTaken = true;
 	                sensors.remove(0);
 	            }
 	        }   
 	        
+	        if (!readingTaken) {
+	            flightPath += ",null";
+	        }
+	        
+	        // Add the flightPathInfo string
+	        App.flightpathInformation.add(flightPath);
 	    }
 	}
 	
@@ -185,10 +197,9 @@ public class Drone {
 	    var moveLine = new Line(newPosition, initialPosition);
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
-	        var intersects = intersect(newPosition, initialPosition, boundary.getCoordinateA(), boundary.getCoordinateB());
+	        var intersects = moveLine.isIntersecting(boundary);
+	        var intersecting = intersect(newPosition, initialPosition, boundary.getCoordinateA(), boundary.getCoordinateB());
 	        if (intersects) {
-	            //System.out.println("Drone: " + newPosition.toString() + " " + initialPosition);
-	            //System.out.println("Intersects: " + );
 	            return true; // since the proposed move crosses a forbidden line
 	        }
 	    }
@@ -213,12 +224,6 @@ public class Drone {
         double Y3 = coordLine1A.latitude;
         double X4 = coordLine1B.longitude;
         double Y4 = coordLine1B.latitude;
-        
-//        System.out.println("X1, Y1: " + X1 + "," + Y1);
-//        System.out.println("X1, Y1: " + X1 + "," + Y1);
-//        System.out.println("X1, Y1: " + X1 + "," + Y1);
-//        System.out.println("X1, Y1: " + X1 + "," + Y1);
-        
         
         boolean result = false;
        
@@ -278,12 +283,6 @@ public class Drone {
                     result = true;
                 }
             }
-        
-//        if (Yi1 != Yi2) {
-//            System.out.println("not equal!");
-//            System.out.println("(x,y):  " + Xi + ", " + Yi1 );
-//            System.out.println("(x,y):  " + Xi + ", " + Yi2 );
-//        }
         }
         return result;
     }
@@ -359,6 +358,7 @@ public class Drone {
 	    var startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
 	    route.add(startPoint); 
 	}
+	
 	
 	/*
 	 * Check if the drone is close to the starting position (<0.0003)
