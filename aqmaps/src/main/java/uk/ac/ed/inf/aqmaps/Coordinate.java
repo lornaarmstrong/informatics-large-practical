@@ -3,6 +3,7 @@ package uk.ac.ed.inf.aqmaps;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
+import com.mapbox.turf.TurfJoins;
 
 /**
  * Coordinate class, as pairs of latitude and longitude values
@@ -53,6 +54,33 @@ public class Coordinate {
 		permittedLongitude = -3.192473 < longitude && longitude < -3.184319;
 		return (permittedLatitude && permittedLongitude);
 	}
+    
+    /*
+     * Check if the coordinate is in a forbidden zone
+     */
+    public boolean isInNoFlyZone(CampusMap map) {
+        for (Feature feature: map.noFlyZones) {
+            Polygon polygon = (Polygon) feature.geometry();
+            Point point = Point.fromLngLat(this.longitude, this.latitude);
+            boolean isInside = TurfJoins.inside(point, polygon);
+            if (isInside) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /*
+     *  Calculate Euclidean distance between currentNode and sensor
+     */
+    public double getEuclideanDistance(Coordinate coordinate) { 
+        var y1 = this.latitude;
+        var x1 = this.longitude;
+        var y2 = coordinate.latitude;
+        var x2 = coordinate.longitude;
+        var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+        return distance;
+    }
     
     /*
      * Gets the next coordinate based on the direction and distance

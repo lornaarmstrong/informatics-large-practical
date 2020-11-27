@@ -5,7 +5,6 @@ import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The Drone class represents a Drone, with a position and number of 
@@ -16,17 +15,19 @@ public class Drone {
 	
 	private Coordinate currentPosition;
 	public Coordinate startPosition;
-	public int moves = 150;
+	private int moves = 150;
 	public final double moveLength = 0.0003;
 	public boolean returningToStart;
 	public ArrayList<Point> route = new ArrayList<Point>();
 	private ArrayList<Sensor> sensors = new ArrayList<Sensor>();
 	public ArrayList<Sensor> checkedSensors = new ArrayList<Sensor>();
+	private CampusMap map;
 	
-	public Drone(Coordinate startPosition) {
+	public Drone(Coordinate startPosition, CampusMap map) {
 	    this.currentPosition = startPosition;
 	    this.startPosition = startPosition;
 	    this.returningToStart = false;
+	    this.map = map;
 	}
 	
 	// Getters and Setters
@@ -91,7 +92,7 @@ public class Drone {
 	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
 	    var readingTaken = false;
 	    
-	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)  || proposedNextPosition.isInNoFlyZone()) {   
+	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition) || proposedNextPosition.isInNoFlyZone(map)) {   
 	        var newDirection = getNewAngleClockwise(direction);
 	        moveDrone(newDirection);
 	    } else {
@@ -135,7 +136,7 @@ public class Drone {
 	 */
 	private boolean moveInterceptsNoFly(Coordinate newPosition, Coordinate initialPosition) {
 	    var noFlyBoundaries = new ArrayList<Line>();
-	    for (Feature feature: App.noFlyZones) {
+	    for (Feature feature: map.noFlyZones) {
 	        var polygon = (Polygon) feature.geometry();
 	        var coordinateLists = polygon.coordinates();
 	        var coordinateList = coordinateLists.get(0);

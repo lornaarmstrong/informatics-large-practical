@@ -1,7 +1,5 @@
 package uk.ac.ed.inf.aqmaps;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
@@ -10,11 +8,6 @@ import com.mapbox.geojson.Point;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,9 +30,6 @@ public class App
     public static double[][] distanceMatrix = new double [34][34];
     public static List<LineString> buildingLines = new ArrayList<LineString>();
     
-    // for testing
-    public static List<Point> pointsInZones = new ArrayList<>();
-    
     public static void main( String[] args ) throws Exception {
         // Get the input 
         String day = args[0];
@@ -50,27 +40,22 @@ public class App
         int seed = Integer.parseInt(args[5]);
         portNumber = Integer.parseInt(args[6]);
         
-        // TODO add input validation / checks
-        
-        // Get the list of sensors and no-fly zones from the server
-        List<Sensor> sensorsForTheDay = getSensorList(day, month, year);
-        sensorList = sensorsForTheDay.subList(0, 33); // to ensure only 33 sensors are checked        
-        FeatureCollection noFlyZoneList = getNoFlyZoneList();
+        // Set up the map and fetch all necessary data from the server
+        CampusMap map = new CampusMap(day, month, year);
+        map.getSensorListFromServer(portNumber);
+        sensorList = map.sensors.subList(0,33);
+        map.getNoFlyZonesFromServer(portNumber);
         
         // Get the latitude and longitude values of each sensor using the server and store
         for (Sensor sensor: sensorList) {
             sensor.translateWhat3Words();
         }
         
-        // Breaking the no fly zones into polygons
-        noFlyZones = noFlyZoneList.features();
-        
         // Create the drone's starting point and drone instance
         Coordinate startPosition = new Coordinate(startLatitude, startLongitude);
-        drone = new Drone(startPosition);
-        Point startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
-        System.out.println("Drone start: " + drone.startPosition.latitude + ", " + drone.startPosition.longitude);
-
+        drone = new Drone(startPosition, map);
+        
+        System.out.println("Drone starting position: " + startPosition.toString());
         calculateDistanceMatrix();
        
         // Find nearest node J, move to it, and build the partial tour (I, J)
@@ -78,9 +63,7 @@ public class App
         sensorsInOrder.add(nearestSensor);
        
         while (sensorsInOrder.size() < sensorList.size()) {
-            // checked and this works!
             var nextSensorToInclude = selectNearestSensor();
-            // inserting needs to be checked
             insertIntoOrder(nextSensorToInclude);
         }
         
@@ -99,18 +82,6 @@ public class App
         
         // CHECKING -- PRINTING ALL SENSORS
         var markerFeatures = createMarkers();
-        // CHECKING -- PRINT THE NO FLY ZONES
-        for (Feature feature: noFlyZones) {
-            markerFeatures.add(feature);
-        }
-        // CHECKING -- PRINT OUT THE POSITION OF ANY POINTS IN BUILDINGS
-        if (pointsInZones.size() > 0) {
-            for (Point point : pointsInZones) {
-                var markerGeometry = (Geometry) point;
-                var markerFeature = Feature.fromGeometry(markerGeometry);
-                markerFeatures.add(markerFeature);
-            }   
-        }
         
         // CHECKING -- PRINTING START LOCATION
         var pointStart = Point.fromLngLat(startLongitude, startLatitude);
@@ -125,12 +96,6 @@ public class App
 //        var pathGeometry = (Geometry) pathLine;
 //        var pathFeature = Feature.fromGeometry(pathGeometry);
 //        markerFeatures.add(pathFeature);
-        // CHECKING -- PRINT ALL NO FLY ONE EDGES
-//        for (LineString line: buildingLines) {
-//            Geometry geoLine = (Geometry) line;
-//            Feature featureLine = Feature.fromGeometry(geoLine);
-//            markerFeatures.add(featureLine);
-//        }
         // CHECKING -- PRINT ALL SENSORS
 //        for (Sensor sensor: sensorList) {
 //            Point sensorPoint = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
@@ -139,15 +104,6 @@ public class App
 //            markerFeature.addStringProperty("marker-color", "#0000FF");
 //            markerFeatures.add(markerFeature);
 //        }
-        // CHECKING -- PRINTING LINESTRING FOR THE DRONE
-        var pathLineDrone = LineString.fromLngLats(drone.route);
-        var pathLineDroneGeometry = (Geometry) pathLineDrone;
-        var pathFeatureDrone = Feature.fromGeometry(pathLineDroneGeometry);
-        markerFeatures.add(pathFeatureDrone);
-        var allMarkers = FeatureCollection.fromFeatures(markerFeatures);
-        writeJsonFile("sensorMap.geojson", allMarkers.toJson());
-        
-        System.out.println("Number of moves: " + (150 - drone.moves) );
         
         // Sensors and drone path for readings file
         var features = createMarkers();
@@ -161,7 +117,6 @@ public class App
         String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
         String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
         
-        
         FileWriter fileWriter = new FileWriter(flightpathFile);
         for (int i = 0; i < flightpathInformation.size(); i ++) {
             fileWriter.write( (i+1) + "," + flightpathInformation.get(i) + "\n");
@@ -173,28 +128,31 @@ public class App
       
     }
     
+    /*
+     * Fills a 34 x 34 grid with the distances from all sensors to each other sensor, and all sensors
+     * to the start.
+     */
     public static void calculateDistanceMatrix() throws IOException, InterruptedException {
-        // Fills a 34 x 34 grid with the distances to all other nodes
         for (int i = 0; i < distanceMatrix.length; i++) {
             for (int j = 0; j < distanceMatrix.length; j++) {
                 if (i == j) {
                     distanceMatrix[i][j] = 100;
                 } else {
+                    Coordinate destination;
+                    Coordinate startFrom;
                     if (i == 0) {
-                        var destination = sensorList.get(j - 1).getPosition();
-                        var startFrom = drone.startPosition;
-                        distanceMatrix[i][j] = getEuclideanDistance(startFrom, destination);
+                        destination = sensorList.get(j - 1).getPosition();
+                        startFrom = drone.startPosition;
                     } else {
                         if (j == 0) {
-                            var destination = drone.startPosition;
-                            var startFrom = sensorList.get(i - 1).getPosition();
-                            distanceMatrix[i][j] = getEuclideanDistance(startFrom, destination);
+                            destination = drone.startPosition;
+                            startFrom = sensorList.get(i - 1).getPosition();
                         } else {
-                            var startFrom = sensorList.get(i - 1).getPosition();
-                            var destination = sensorList.get(j - 1).getPosition();
-                            distanceMatrix[i][j] = getEuclideanDistance(startFrom, destination);
+                            startFrom = sensorList.get(i - 1).getPosition();
+                            destination = sensorList.get(j - 1).getPosition();
                         }
                     }
+                    distanceMatrix[i][j] = startFrom.getEuclideanDistance(destination);
                 }
             }
         }
@@ -216,7 +174,6 @@ public class App
         
         //System.out.println("Number of Sensors In Order: " + sensorsInOrder.size());
         for (int i = 0; i < sensorsInOrder.size(); i ++) {
-//            System.out.println("I: " + i);
             int count = 0;
 
             // Consider adjacent points I and J from the sensors in order
@@ -235,9 +192,9 @@ public class App
             }
 
             // Calculate d(I,N) + d(N,J) - d(I,J)
-            var distanceIJ = getEuclideanDistance(temporaryNodeI, temporaryNodeJ);
-            var distanceIN = getEuclideanDistance(temporaryNodeI, nodeN);
-            var distanceNJ = getEuclideanDistance(nodeN, temporaryNodeJ);
+            var distanceIJ = temporaryNodeI.getEuclideanDistance(temporaryNodeJ);
+            var distanceIN = temporaryNodeI.getEuclideanDistance(nodeN);
+            var distanceNJ = nodeN.getEuclideanDistance(temporaryNodeJ);
             var formulaResult = distanceIN + distanceNJ - distanceIJ;
             
             // If this is the first distance we have checked, update the minimum
@@ -282,14 +239,10 @@ public class App
      */
     public static Sensor selectNearestSensor() throws IOException, InterruptedException {
         Sensor nextSensorToInclude = null;
-        
-        // Create a HashMap to store the shortest distance from each sensor (not in path)
-        // to a sensor in the path (the sensor in particular doesn't matter)
         var sensorDistancePair = new HashMap<Sensor, Double>();
         
         // For each row in distanceMatrix where row greater than 0
-        // Find the smallest value in the row
-        
+        // Find the smallest value in the row        
         for (Sensor currentSensor: sensorList) {
             if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
@@ -308,7 +261,7 @@ public class App
                     } 
                 }
                 // Check distance to start and save if shorter than shortestDistance
-                distance = getEuclideanDistance(drone.startPosition, sensorNotAddedCoordinate);
+                distance = drone.startPosition.getEuclideanDistance(sensorNotAddedCoordinate);
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
                  }
@@ -402,7 +355,7 @@ public class App
     public static Sensor findNearestSensor(Coordinate currentNode) throws IOException, InterruptedException {
         var shortestDistance = 0.0;
         Sensor nextNode = null; // default to null
-        var counter = 0;
+        var counter = 0; 
         for (int i = 0; i < distanceMatrix.length - 1; i++) {
             var distance = distanceMatrix[0][i + 1];
             if (counter == 0) {
@@ -416,50 +369,7 @@ public class App
         }
         return nextNode;
     }
-
-    /*
-     *  Calculate Euclidean distance between currentNode and sensor
-     */
-    public static double getEuclideanDistance(Coordinate currentNode, Coordinate nextNode) { 
-        double y1 = currentNode.latitude;
-        double x1 = currentNode.longitude;
-        double y2 = nextNode.latitude;
-        double x2 = nextNode.longitude;
-        var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
-        return distance;
-    }
-
-    /*
-     * Get the list of all sensors to be visited on the given date (from input) 
-     */
-    public static List<Sensor> getSensorList(String day, String month, String year) 
-            throws IOException, InterruptedException {
-        System.out.println("Getting sensor list from server");
-        var client = HttpClient.newHttpClient();
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/air-quality-data.json", 
-                        portNumber,year,month,day)))
-                .build();
-        var response = client.send(request, BodyHandlers.ofString());
-        
-        var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
-        List<Sensor> sensorsForThatDay = new Gson().fromJson(response.body(), listType);
-        return sensorsForThatDay;
-    }
-    
-    /*
-     * Get the list of all polygons representing the buildings in the no-fly zone 
-     */
-    public static FeatureCollection getNoFlyZoneList() throws IOException, InterruptedException {
-        var client = HttpClient.newHttpClient();
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
-                .build();
-        var response = client.send(request, BodyHandlers.ofString());
-        FeatureCollection features = FeatureCollection.fromJson(response.body());
-        return features;
-    }
-   
+ 
     /*
      * Write json to a given filename
      */
