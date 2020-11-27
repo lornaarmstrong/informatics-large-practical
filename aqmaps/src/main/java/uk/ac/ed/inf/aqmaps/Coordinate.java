@@ -3,7 +3,6 @@ package uk.ac.ed.inf.aqmaps;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
-import com.mapbox.turf.*;
 
 /**
  * Coordinate class, as pairs of latitude and longitude values
@@ -40,7 +39,7 @@ public class Coordinate {
 	/*
 	 * equals method
 	 */
-	public boolean equals(Coordinate coord) {
+	private boolean equals(Coordinate coord) {
 		return ((this.latitude == coord.latitude) && (this.longitude == coord.longitude));
 	}
 	
@@ -54,39 +53,23 @@ public class Coordinate {
 		permittedLongitude = -3.192473 < longitude && longitude < -3.184319;
 		return (permittedLatitude && permittedLongitude);
 	}
-	
-	/*
-	 * A useful function that represents the coordinate as a string
-	 */
-	public String toString() {
-	    return (latitude + ", "  + longitude);
-	}
-
-	/*
-	 * Gets the next coordinate based on the direction and distance
-	 */
+    
+    /*
+     * Gets the next coordinate based on the direction and distance
+     */
     public Coordinate getNextPosition(int direction, double moveLength) {
-        double radians = Math.toRadians(direction);
-        Coordinate updatedPosition;
+        var radians = Math.toRadians(direction);
         // Use trigonometry to calculate the longitude and latitude values
-        Double xValue = moveLength * Math.cos(radians);
-        Double yValue = moveLength * Math.sin(radians);
-        updatedPosition = new Coordinate(this.latitude + yValue, this.longitude + xValue);
+        var xValue = moveLength * Math.cos(radians);
+        var yValue = moveLength * Math.sin(radians);
+        var updatedPosition = new Coordinate(this.latitude + yValue, this.longitude + xValue);
         return updatedPosition;
     }
     
     /*
-     * Check if the coordinate is in a forbidden zone
+     * A useful function that represents the coordinate as a string
      */
-    public boolean isInNoFlyZone() {
-        for (Feature feature: App.noFlyZones) {
-            Polygon polygon = (Polygon) feature.geometry();
-            Point point = Point.fromLngLat(this.longitude, this.latitude);
-            boolean isInside = TurfJoins.inside(point, polygon);
-            if (isInside) {
-                return true;
-            }
-        }
-        return false;
+    public String toString() {
+        return (latitude + ", "  + longitude);
     }
 }
