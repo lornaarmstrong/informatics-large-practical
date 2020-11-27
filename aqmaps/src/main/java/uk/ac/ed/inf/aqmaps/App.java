@@ -7,7 +7,6 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
 import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -168,8 +167,6 @@ public class App
             fileWriter.write( (i+1) + "," + flightpathInformation.get(i) + "\n");
         }
         fileWriter.close();
-        
-        drone.testing();
         
         // GeoJSON
         writeJsonFile(readingsFile, allFeatures.toJson());
