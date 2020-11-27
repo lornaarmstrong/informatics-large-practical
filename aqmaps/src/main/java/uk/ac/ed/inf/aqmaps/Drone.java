@@ -84,46 +84,6 @@ public class Drone {
 	    }
 	}
 	
-	public void testing() {
-	    var noFlyBoundaries = new ArrayList<Line>();
-        for (Feature feature: App.noFlyZones) {
-            var polygon = (Polygon) feature.geometry();
-            var coordinateLists = polygon.coordinates();
-            var coordinateList = coordinateLists.get(0);
-            for (int i = 0; i < coordinateList.size() - 1; i++) {
-                var  pointA = coordinateList.get(i);
-                var pointB = coordinateList.get(i + 1);
-                var coordA = new Coordinate(pointA.latitude(), pointA.longitude());
-                var coordB = new Coordinate(pointB.latitude(), pointB.longitude());
-                var line = new Line(coordA, coordB);
-                noFlyBoundaries.add(line);
-            }
-        }
-        //System.out.println(noFlyBoundaries.size());
-	    Coordinate dronePos = new Coordinate(55.94423926992553,-3.187132842309832);
-	    Coordinate droneNewPos = dronePos.getNextPosition(80, 0.0003);
-	    System.out.println("Drone New Pos: " + droneNewPos.toString());
-	    
-	    var moveLine = new Line(dronePos, droneNewPos);
-	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
-            var boundary = noFlyBoundaries.get(i);
-           // var intersects = intersect(droneNewPos, dronePos, boundary.getCoordinateA(), boundary.getCoordinateB());
-            var intersects  = moveLine.isIntersecting(boundary);
-            if (intersects) {
-                System.out.println("Drone: " + droneNewPos.toString() + " " + dronePos);
-                System.out.println("Boundary: " + boundary.getCoordinateA().toString() + ", " + boundary.getCoordinateB().toString());
-                System.out.println("Intersect = true");
-                System.out.println("--------");
-            } else {
-                System.out.println("Drone: " + droneNewPos.toString() + " " + dronePos);
-                System.out.println("Boundary: " + boundary.getCoordinateA().toString() + ", " + boundary.getCoordinateB().toString());
-                System.out.println("Intersect = false");
-                System.out.println("-------");
-            }
-        }
-	    
-	}
-	
 	/*
 	 * Move the drone, update its position and add the new position coordinates to route
 	 */
@@ -188,106 +148,16 @@ public class Drone {
 	            noFlyBoundaries.add(line);
 	        }
 	    }
-	    // Print out all no fly lines
-//	    System.out.println(noFlyBoundaries.size());
-//	    System.out.println("LINES");
-//	    for (Line line : noFlyBoundaries) {
-//	        System.out.println(line.toString());
-//	    }    
 	    var moveLine = new Line(newPosition, initialPosition);
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
-	        var intersects = moveLine.isIntersecting(boundary);
-	        var intersecting = intersect(newPosition, initialPosition, boundary.getCoordinateA(), boundary.getCoordinateB());
-	        if (intersects) {
-	            return true; // since the proposed move crosses a forbidden line
+	        var moveIntersects = moveLine.isIntersecting(boundary);
+	        if (moveIntersects) {
+	            return true; // since the proposed move crosses a boundary
 	        }
 	    }
 	    return false;
-    }
-	
-
-	/*
-	 * Returns true if the line between initialPosition and newPosition intersects the line between coordLine1A
-	 * and coordLine1B, else false
-	 */
-    private boolean intersect(Coordinate initialPosition, Coordinate newPosition, Coordinate coordLine1A,
-            Coordinate coordLine1B) {
-        
-        // Coordinates for the line representing the drone's suggested movement
-        double X1 = initialPosition.longitude;
-        double Y1 = initialPosition.latitude;
-        double X2 = newPosition.longitude;
-        double Y2 = newPosition.latitude;
-        // Coordinates for the line representing the no fly zone
-        double X3 = coordLine1A.longitude;
-        double Y3 = coordLine1A.latitude;
-        double X4 = coordLine1B.longitude;
-        double Y4 = coordLine1B.latitude;
-        
-        boolean result = false;
-       
-        // Check if there's an interval
-        if (Math.max(X1, X2) < Math.min(X3, X4)) {
-            // if there isn't a common x interval, return false as the lines can't intersect
-            //System.out.println("No common interval");
-            result = false;
-            //System.out.println("no possible interval");
-            //return false;
-        }
-        
-//        System.out.println("Y1 - Y2 " + (Y1 - Y2));
-//        System.out.println("X1 - X2 " + (X1 - X2));
-        
-        // f1(x) = m1x + c1 = y
-        // f2(x) = m2x + c2 = y
-        // Calculate A1, A2, b1, b2
-        
-        if (X1 - X2 == 0 ) {
-            // We know one line is a vertical line
-            // Check if one point of the other line lies on either side
-            // if so, the lines intersect
-            if ( Math.min(X3,X4) <= X1 && Math.max(X3,X4) >= X1) {
-                return true;
-            }
-        } else {
-        
-            double m1 = (Y1 - Y2) / ( X1 - X2);
-            double m2 = (Y3 - Y4) / (X3 - X4);
-            double c1 = Y1 - (m1 * X1);
-            double c2 = Y3 - (m2 * X3);
-            
-            //System.out.println("m1: " + m1);
-            
-            // Check if the two lines are parallel
-            if (m1 == m2) {
-                //System.out.println("m1 == m2");
-                result = false;
-            }
-        
-            // A point (Xi, Yi) of intersection lying on both lines must fit both formulas
-            //System.out.println("c2 - c1" + (c2-c1));
-            double Xi = (c2 - c1) / (m1 - m2);
-            double Yi1 = (m1 * Xi) + c1;
-            double Yi2 = (m2 * Xi) + c2;
-            if ( Yi1 == Yi2) {
-                // The point of intersection lies on both lines are in mcgrath
-                
-                // Check that Xi is in the interval
-                if ((Xi < Math.max(Math.min(X1,X2), Math.min(X3, X4))) 
-                        || (Xi > Math.min(Math.max(X1, X2), Math.max(X3, X4)))) {
-                    result = false;
-                    //System.out.println("Not in range");
-                } else {
-                    //System.out.println("TRUE");
-                    result = true;
-                }
-            }
-        }
-        return result;
-    }
-    
-    
+	}
     
     
 	private void takeReading(Sensor sensor) {
