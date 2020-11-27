@@ -33,13 +33,6 @@ public class Line {
     public void setCoordinateB(Coordinate coordinateB) {
         this.coordinateB = coordinateB;
     }
-    
-    /*
-     * Useful method for use with testing and debugging
-     */
-    public String toString() {
-        return ("line: " + coordinateB.toString() + " to " + coordinateA.toString());
-    }
 
     /*
      * Checks if this line (the drone's suggested movement) intersects with the passed-in boundary
@@ -107,5 +100,12 @@ public class Line {
             }
         }
         return false;
-    }   
+    }
+    
+    /*
+     * Useful method for use with testing and debugging
+     */
+    public String toString() {
+        return ("line: " + coordinateB.toString() + " to " + coordinateA.toString());
+    }
 }
