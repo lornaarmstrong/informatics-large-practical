@@ -10,8 +10,8 @@ import com.mapbox.geojson.Point;
 
 public class DroneTest {
 
-    Coordinate coord1 = new Coordinate (55.94444, -3.1878);
-    Drone drone1 = new Drone(coord1);
+//    Coordinate coord1 = new Coordinate (55.94444, -3.1878);
+//    Drone drone1 = new Drone(coord1);
     
 //    /*
 //     * When given a degree, should convert to radians

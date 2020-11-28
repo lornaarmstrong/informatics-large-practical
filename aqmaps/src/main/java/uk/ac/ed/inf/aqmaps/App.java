@@ -22,7 +22,7 @@ public class App
 {
     public static List<Sensor> sensorList = new ArrayList<Sensor>(); // list of all sensors to be visited in the day
     public static ArrayList<Sensor> sensorsInOrder = new ArrayList<Sensor>(); // list of all sensors in the order they should be visited
-    public static List<Feature> noFlyZones; // areas the drone cannot fly into
+    //public static List<Feature> noFlyZones; // areas the drone cannot fly into
     public static int portNumber;
     public static Drone drone;
     public static List<String> flightpathInformation = new ArrayList<String>();
@@ -57,7 +57,8 @@ public class App
         
         System.out.println("Drone starting position: " + startPosition.toString());
         calculateDistanceMatrix();
-       
+        //calculateDistanceMatrix(startPosition);
+               
         // Find nearest node J, move to it, and build the partial tour (I, J)
         Sensor nearestSensor = findNearestSensor(startPosition);
         sensorsInOrder.add(nearestSensor);
@@ -70,6 +71,12 @@ public class App
         drone.setSensors(sensorsInOrder); // give the drone the list of sensors to visit in order
         drone.startRoute(); // starts the route by adding the start point
         drone.visitSensors();
+        
+        // Counting number of moves
+        Coordinate coordA = new Coordinate(55.94402112658734,-3.186974744341161);
+        Coordinate destA = new Coordinate(55.94475044893357,-3.1911109369038146);
+        System.out.println("Number of moves:");
+        System.out.println(drone.countNumberMoves(coordA, destA, 0));
         
 //        // The 'expected' route (calculated using Nearest Insertion)
 //        idealRoute.add(startPoint);

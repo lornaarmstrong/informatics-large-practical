@@ -5,6 +5,8 @@ import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Drone class represents a Drone, with a position and number of 
@@ -22,6 +24,7 @@ public class Drone {
 	private ArrayList<Sensor> sensors = new ArrayList<Sensor>();
 	public ArrayList<Sensor> checkedSensors = new ArrayList<Sensor>();
 	private CampusMap map;
+	public Map<Integer,String> possibleMoveTracker = new HashMap<Integer,String>(); // HashMap of droneMoves, positionMovedTo
 	
 	public Drone(Coordinate startPosition, CampusMap map) {
 	    this.currentPosition = startPosition;
@@ -71,7 +74,8 @@ public class Drone {
 	    var keepGoing = true;
 	    while (keepGoing) {
 	        // Calculate the angle needed
-	        var direction = getDirection();
+	        var destination = getDestination();
+	        var direction = getDirection(destination);
 	        // Make one move
 	        moveDrone(direction);
 	        // Check the 'stopping' conditions
@@ -123,6 +127,69 @@ public class Drone {
 	    }
 	}
 	
+	/*
+	 * Returns the number of drone moves required to get the drone from one coordinate 
+	 * to another.
+	 */
+	public int countNumberMoves(Coordinate startPoint, Coordinate destination, int movesTaken) throws IOException, InterruptedException {
+	    var closeTo = 0.0002; // within range of a sensor
+	    int movesCount = movesTaken + 1;
+ 
+	    // Make the move
+	    int direction = getDirection(destination);
+        startPoint = startPoint.getNextPosition(direction, moveLength);
+        System.out.println("next: " + startPoint.toString());
+        // Check if close to destination
+        
+        // If the destination is the starting point, 'close to' is defined as < 0.0003
+        // so update closeTo to be 0.0003
+        if (destination.equals(this.startPosition)) {
+            System.out.println("aiming for the start");
+            closeTo = 0.0003;
+        }
+        
+	    // Check if we are close to destination, return how many moves it took
+	    if (startPoint.getEuclideanDistance(destination) < closeTo) {
+	        System.out.println("Close to destination so returning movesCount");
+	        return movesCount;
+	    } else { // else, recursively call countNumberMoves
+	        // update the start position
+	        movesCount = countNumberMoves(startPoint, destination, movesTaken+1);
+	    }
+	    //System.out.println(movesCount);
+	    return movesCount;
+	}
+	
+//	/*
+//	 * Returns the number of moves required to get to get to the destination
+//	 * @params direction (angle) and moves (number of moves the drone has at the start of the move
+//	 * and startPosition, coordinate representing where the move starts from
+//	 */
+//	public void possibleMoveDrone(int direction, int droneMoves, Coordinate startPosition) {
+//	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
+//	    var readingTaken = false;
+//	    
+//	    if (moveInterceptsNoFly(proposedNextPosition, startPosition) || proposedNextPosition.isInNoFlyZone(map)) {   
+//            var newDirection = getNewAngleClockwise(direction);
+//            possibleMoveDrone(newDirection, droneMoves, startPosition);
+//        } else {
+//            droneMoves -= 1;
+//            startPosition = proposedNextPosition;
+//            var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
+//            route.add(nextPoint);
+//            // Check if this new position is in range of the destination sensor
+//            if (sensors.size() > 0) {
+//                var sensor = sensors.get(0);
+//                if (withinSensorRange(sensor)) {
+//                    takeReading(sensor);
+//                    readingTaken = true;
+//                    sensors.remove(0);
+//                }
+//            }
+//        }
+//	    
+//	}
+	
 	private int getNewAngleClockwise(int direction) {
 	    return (direction + 10);
     }
@@ -167,8 +234,6 @@ public class Drone {
 	    var sensorLocation = sensor.getLocation();
 	    var sensorReading = sensor.getReading();
 	    Sensor checkedSensor = new Sensor(sensorLocation, sensorBatteryLevel, sensorReading);
-	    //System.out.println("Reading Taken: " + sensorLocation + " " + sensorBatteryLevel + " " + sensorReading);
-	    
 	    // TODO fix this problem as it only wokrs when you add the sensor, not checkedSensor
 	    checkedSensors.add(sensor);
 	}
@@ -194,8 +259,7 @@ public class Drone {
 	 * Returns the most optimal angle of travel for the drone from it's current position
 	 * to the position of the next coordinate to visit.
 	 */
-	private int getDirection() throws IOException, InterruptedException {
-	    var destination = getDestination();
+	private int getDirection(Coordinate destination) throws IOException, InterruptedException {
 	    // Calculate the angle of the line needed to get to the sensor
 	    var yDistance = destination.latitude - currentPosition.latitude;
 	    var xDistance = destination.longitude - currentPosition.longitude;
