@@ -132,77 +132,30 @@ public class Drone {
 	 * to another.
 	 */
 	public int countNumberMoves(Coordinate startPoint, Coordinate destination, int movesTaken) throws IOException, InterruptedException {
-	    //System.out.println();
-	    var closeTo = 0.0002; // within range of a sensor
+	    var closeTo = 0.0002;
 	    int movesCount = movesTaken + 1;
-	    
-	    var direction = startPoint.getAngle(destination);
-	    
+	    var direction = startPoint.getAngle(destination);   
         var nextPosition = startPoint.getNextPosition(direction + 10, moveLength);
-        
-        System.out.println("Direction: " + direction);
-        System.out.println("Starting: " + startPoint.toString());
-        System.out.println("Destination " + destination.toString());
-        System.out.println("Suggested Next: " + nextPosition.toString());
-        // Check if close to destination
         
         // If the destination is the starting point, 'close to' is defined as < 0.0003
         // so update closeTo to be 0.0003
         if (destination.equals(this.startPosition)) {
-            System.out.println("aiming for the start");
             closeTo = 0.0003;
         }
         
-        System.out.println("Intercepts? " + (moveInterceptsNoFly(nextPosition, startPoint) || nextPosition.isInNoFlyZone(map)));
-        
-        int count = 0;
         while (moveInterceptsNoFly(nextPosition, startPoint) || nextPosition.isInNoFlyZone(map)) {
-            //System.out.println(moveInterceps);
-            count++;            System.out.println(direction + "-->" + getNewAngleClockwise(direction));
             direction = getNewAngleClockwise(direction);
             nextPosition = startPoint.getNextPosition(direction, moveLength);
         }
         
 	    // Check if we are close to destination, return how many moves it took
 	    if (nextPosition.getEuclideanDistance(destination) < closeTo) {
-	        System.out.println("Close to destination so returning movesCount: " + nextPosition.getEuclideanDistance(destination) + "   " + nextPosition.toString() + " " + destination.toString() );
 	        return movesCount;
 	    } else { // else, recursively call countNumberMoves
 	        movesCount = countNumberMoves(nextPosition, destination, movesTaken + 1);
 	    }
-	    //System.out.println(movesCount);
 	    return movesCount;
 	}
-	
-//	/*
-//	 * Returns the number of moves required to get to get to the destination
-//	 * @params direction (angle) and moves (number of moves the drone has at the start of the move
-//	 * and startPosition, coordinate representing where the move starts from
-//	 */
-//	public void possibleMoveDrone(int direction, int droneMoves, Coordinate startPosition) {
-//	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
-//	    var readingTaken = false;
-//	    
-//	    if (moveInterceptsNoFly(proposedNextPosition, startPosition) || proposedNextPosition.isInNoFlyZone(map)) {   
-//            var newDirection = getNewAngleClockwise(direction);
-//            possibleMoveDrone(newDirection, droneMoves, startPosition);
-//        } else {
-//            droneMoves -= 1;
-//            startPosition = proposedNextPosition;
-//            var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
-//            route.add(nextPoint);
-//            // Check if this new position is in range of the destination sensor
-//            if (sensors.size() > 0) {
-//                var sensor = sensors.get(0);
-//                if (withinSensorRange(sensor)) {
-//                    takeReading(sensor);
-//                    readingTaken = true;
-//                    sensors.remove(0);
-//                }
-//            }
-//        }
-//	    
-//	}
 	
 	private int getNewAngleClockwise(int direction) {
 	    return ((direction + 10) % 360);
