@@ -117,11 +117,9 @@ public class Drone {
 	                sensors.remove(0);
 	            }
 	        }   
-	        
 	        if (!readingTaken) {
 	            flightPath += ",null";
 	        }
-	        
 	        // Add the flightPathInfo string
 	        App.flightpathInformation.add(flightPath);
 	    }
