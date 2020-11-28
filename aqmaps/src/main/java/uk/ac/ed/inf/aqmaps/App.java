@@ -74,9 +74,10 @@ public class App
         
         // Counting number of moves
         Coordinate coordA = new Coordinate(55.94402112658734,-3.186974744341161);
-        Coordinate destA = new Coordinate(55.94475044893357,-3.1911109369038146);
-        System.out.println("Number of moves:");
-        System.out.println(drone.countNumberMoves(coordA, destA, 0));
+        //Coordinate destA = new Coordinate(55.94475044893357,-3.1911109369038146);
+        Coordinate destA = new Coordinate(55.9447,-3.1911);
+//        System.out.println("Number of moves:");
+//        System.out.println(drone.countNumberMoves(coordA, destA, 0));
         
 //        // The 'expected' route (calculated using Nearest Insertion)
 //        idealRoute.add(startPoint);

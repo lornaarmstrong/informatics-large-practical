@@ -134,11 +134,10 @@ public class Drone {
 	public int countNumberMoves(Coordinate startPoint, Coordinate destination, int movesTaken) throws IOException, InterruptedException {
 	    var closeTo = 0.0002; // within range of a sensor
 	    int movesCount = movesTaken + 1;
- 
-	    // Make the move
-	    int direction = getDirection(destination);
-        startPoint = startPoint.getNextPosition(direction, moveLength);
-        System.out.println("next: " + startPoint.toString());
+	    
+	    var direction = getDirection(destination);
+        var nextPosition = startPoint.getNextPosition(direction, moveLength);
+        System.out.println("next: " + nextPosition.toString());
         // Check if close to destination
         
         // If the destination is the starting point, 'close to' is defined as < 0.0003
@@ -147,14 +146,18 @@ public class Drone {
             System.out.println("aiming for the start");
             closeTo = 0.0003;
         }
+       
+        while (moveInterceptsNoFly(nextPosition, startPoint) || nextPosition.isInNoFlyZone(map)) {
+            direction = getNewAngleClockwise(direction);
+            nextPosition = startPoint.getNextPosition(direction, moveLength);
+        }
         
 	    // Check if we are close to destination, return how many moves it took
-	    if (startPoint.getEuclideanDistance(destination) < closeTo) {
-	        System.out.println("Close to destination so returning movesCount");
+	    if (nextPosition.getEuclideanDistance(destination) < closeTo) {
+	        System.out.println("Close to destination so returning movesCount: " + nextPosition.getEuclideanDistance(destination) + "   " + nextPosition.toString() + " " + destination.toString() );
 	        return movesCount;
 	    } else { // else, recursively call countNumberMoves
-	        // update the start position
-	        movesCount = countNumberMoves(startPoint, destination, movesTaken+1);
+	        movesCount = countNumberMoves(nextPosition, destination, movesTaken + 1);
 	    }
 	    //System.out.println(movesCount);
 	    return movesCount;
