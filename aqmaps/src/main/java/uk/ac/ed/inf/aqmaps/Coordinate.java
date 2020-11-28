@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.io.IOException;
+
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
@@ -80,6 +82,38 @@ public class Coordinate {
         var x2 = coordinate.longitude;
         var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
         return distance;
+    }
+    
+    /*
+     * Returns the angle from the coordinate to the passed in coordinate, rounded to
+     * a multiple of 10.
+     */
+    public int getAngle(Coordinate destination) throws IOException, InterruptedException {
+        // Calculate the angle of the line needed to get to the sensor
+        var yDistance = destination.latitude - this.latitude;
+        var xDistance = destination.longitude - this.longitude;
+        var angleRadians = Math.atan(yDistance / xDistance);
+        var angleDegrees = Math.toDegrees(angleRadians);
+        var angleFromEast = 0.0;
+        // Calculate the angle anti-clockwise, with East = 0 degrees
+        if (xDistance > 0 && yDistance > 0) {
+            angleFromEast = angleDegrees;
+        } else if (xDistance < 0 && yDistance > 0) {
+            angleFromEast = 180 - Math.abs(angleDegrees);
+        } else if (xDistance < 0 && yDistance < 0) {
+            angleFromEast = 180 + angleDegrees;
+        } else if (xDistance > 0 && yDistance < 0) {
+            angleFromEast = 360 - (Math.abs(angleDegrees));
+        }
+        // Round up or down to the corresponding multiple of 10
+        var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
+        var angleRoundedUp = (int) ((10 - angleFromEast % 10) + angleFromEast);
+        System.out.println(angleRoundedDown + " " + angleRoundedUp + " = " + angleDegrees);
+        if ((angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
+            return angleRoundedUp;
+        } else {
+            return angleRoundedDown;
+        }
     }
     
     /*

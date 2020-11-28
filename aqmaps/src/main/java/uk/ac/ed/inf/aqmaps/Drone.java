@@ -75,7 +75,7 @@ public class Drone {
 	    while (keepGoing) {
 	        // Calculate the angle needed
 	        var destination = getDestination();
-	        var direction = getDirection(destination);
+	        var direction = this.currentPosition.getAngle(destination);
 	        // Make one move
 	        moveDrone(direction);
 	        // Check the 'stopping' conditions
@@ -132,12 +132,18 @@ public class Drone {
 	 * to another.
 	 */
 	public int countNumberMoves(Coordinate startPoint, Coordinate destination, int movesTaken) throws IOException, InterruptedException {
+	    //System.out.println();
 	    var closeTo = 0.0002; // within range of a sensor
 	    int movesCount = movesTaken + 1;
 	    
-	    var direction = getDirection(destination);
-        var nextPosition = startPoint.getNextPosition(direction, moveLength);
-        System.out.println("next: " + nextPosition.toString());
+	    var direction = startPoint.getAngle(destination);
+	    
+        var nextPosition = startPoint.getNextPosition(direction + 10, moveLength);
+        
+        System.out.println("Direction: " + direction);
+        System.out.println("Starting: " + startPoint.toString());
+        System.out.println("Destination " + destination.toString());
+        System.out.println("Suggested Next: " + nextPosition.toString());
         // Check if close to destination
         
         // If the destination is the starting point, 'close to' is defined as < 0.0003
@@ -146,8 +152,13 @@ public class Drone {
             System.out.println("aiming for the start");
             closeTo = 0.0003;
         }
-       
+        
+        System.out.println("Intercepts? " + (moveInterceptsNoFly(nextPosition, startPoint) || nextPosition.isInNoFlyZone(map)));
+        
+        int count = 0;
         while (moveInterceptsNoFly(nextPosition, startPoint) || nextPosition.isInNoFlyZone(map)) {
+            //System.out.println(moveInterceps);
+            count++;            System.out.println(direction + "-->" + getNewAngleClockwise(direction));
             direction = getNewAngleClockwise(direction);
             nextPosition = startPoint.getNextPosition(direction, moveLength);
         }
@@ -194,11 +205,11 @@ public class Drone {
 //	}
 	
 	private int getNewAngleClockwise(int direction) {
-	    return (direction + 10);
+	    return ((direction + 10) % 360);
     }
 	
 	private int getNewAngleAnticlockwise(int direction) {
-	    return (direction - 10);
+	    return ((direction - 10) % 360);
 	}
 
     /*
@@ -259,44 +270,12 @@ public class Drone {
 	}
 	
 	/*
-	 * Returns the most optimal angle of travel for the drone from it's current position
-	 * to the position of the next coordinate to visit.
-	 */
-	private int getDirection(Coordinate destination) throws IOException, InterruptedException {
-	    // Calculate the angle of the line needed to get to the sensor
-	    var yDistance = destination.latitude - currentPosition.latitude;
-	    var xDistance = destination.longitude - currentPosition.longitude;
-	    var angleRadians = Math.atan(yDistance / xDistance);
-	    var angleDegrees = Math.toDegrees(angleRadians);
-	    var angleFromEast = 0.0;
-	    // Calculate the angle anti-clockwise, with East = 0 degrees
-	    if (xDistance > 0 && yDistance > 0) {
-	        angleFromEast = angleDegrees;
-	    } else if (xDistance < 0 && yDistance > 0) {
-	        angleFromEast = 180 - Math.abs(angleDegrees);
-	    } else if (xDistance < 0 && yDistance < 0) {
-	        angleFromEast = 180 + angleDegrees;
-	    } else if (xDistance > 0 && yDistance < 0) {
-	        angleFromEast = 360 - (Math.abs(angleDegrees));
-	    }
-	    // Round up or down to the corresponding multiple of 10
-	    var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
-	    var angleRoundedUp = (int) ((10 - angleDegrees % 10) + angleFromEast);
-	    if ((angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
-	        return angleRoundedUp;
-	    } else {
-	        return angleRoundedDown;
-	    }
-	}
-	
-	/*
 	 * Adds the starting point to the route
 	 */
 	public void startRoute() {
 	    var startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
 	    route.add(startPoint); 
 	}
-	
 	
 	/*
 	 * Check if the drone is close to the starting position (<0.0003)
@@ -321,6 +300,7 @@ public class Drone {
 	    return (calculateDistance(sensorLatitude, sensorLongitude, 
 	            positionLatitude, positionLongitude) < 0.0002);
 	}
+	
 	/*
 	 * Calculate Euclidean distance between two sets of latitude and longitude
 	 */
