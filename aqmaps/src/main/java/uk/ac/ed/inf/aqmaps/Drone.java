@@ -71,20 +71,18 @@ public class Drone {
 	 * Move the drone to create a route visiting all sensors (if possible)
 	 */
 	public void visitSensors() throws IOException, InterruptedException {
-	    var keepGoing = true;
-	    while (keepGoing) {
-	        // Calculate the angle needed
-	        var destination = getDestination();
+	    var continueFlight = true;
+	    while (continueFlight) {
+	        var destination = getDestination();	        
 	        var direction = this.currentPosition.getAngle(destination);
-	        // Make one move
 	        moveDrone(direction);
 	        // Check the 'stopping' conditions
 	        if (this.moves == 0) {
 	            System.out.println("---- Out of moves!");
-	            keepGoing = false;
+	            continueFlight = false;
 	        } else if (backToStart() && returningToStart) {
 	            System.out.println("---- Returned to the start!");
-	            keepGoing = false;
+	            continueFlight = false;
 	        }
 	    }
 	}
@@ -133,19 +131,16 @@ public class Drone {
 	    var closeTo = 0.0002;
 	    int movesCount = movesTaken + 1;
 	    var direction = startPoint.getAngle(destination);   
-        var nextPosition = startPoint.getNextPosition(direction + 10, moveLength);
-        
+        var nextPosition = startPoint.getNextPosition(direction, moveLength);
         // If the destination is the starting point, 'close to' is defined as < 0.0003
         // so update closeTo to be 0.0003
         if (destination.equals(this.startPosition)) {
             closeTo = 0.0003;
         }
-        
         while (moveInterceptsNoFly(nextPosition, startPoint) || nextPosition.isInNoFlyZone(map)) {
             direction = getNewAngleClockwise(direction);
             nextPosition = startPoint.getNextPosition(direction, moveLength);
         }
-        
 	    // Check if we are close to destination, return how many moves it took
 	    if (nextPosition.getEuclideanDistance(destination) < closeTo) {
 	        return movesCount;
@@ -213,6 +208,18 @@ public class Drone {
             Sensor destinationSensor = sensors.get(0);
             var sensorCoordinate = destinationSensor.getPosition();
             destination = new Coordinate (sensorCoordinate.latitude, sensorCoordinate.longitude);
+            
+            // Check if the drone has enough moves to get to this sensor and then from the sensor back to the start
+            System.out.println(destinationSensor.getPosition().toString());
+            System.out.println(this.currentPosition.toString());
+            int movesRequiredToSensor = this.countNumberMoves(this.currentPosition, destinationSensor.getPosition(), 0); // number of moves to the next sensor
+            int movesRequiredToStart = this.countNumberMoves(destinationSensor.getPosition(), this.startPosition, 0);
+            int totalMovesRequired = movesRequiredToSensor + movesRequiredToStart;
+            if (totalMovesRequired < 0) {
+                System.out.println("Heading Back to Start");
+                
+            }
+            System.out.println("Moves: " + (this.moves - movesRequiredToSensor - movesRequiredToStart));
         } else {
             returningToStart = true;
             destination = new Coordinate (this.startPosition.latitude, this.startPosition.longitude);
