@@ -1,8 +1,5 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 /**
  * This class represents an object as Line, with two sets
  * coordinates (one for each end of the line) as attributes.
@@ -11,13 +8,14 @@ public class Line {
 
     private Coordinate coordinateA;
     private Coordinate coordinateB;
+    private final double THRESHOLD = 0.0000000000001;
     
     public Line(Coordinate coordinateA, Coordinate coordinateB) {
         this.coordinateA = coordinateA;
         this.coordinateB = coordinateB;
     }
     
-    /* Getters and Setters */
+    // Getters and Setters
     public Coordinate getCoordinateA() {
         return coordinateA;
     }
@@ -35,10 +33,10 @@ public class Line {
     }
 
     /*
-     * Checks if this line (the drone's suggested movement) intersects with the passed-in boundary
+     * Checks if the line intersects with a passed-in line
      */
     public boolean isIntersecting(Line boundary) {
-        /* Coordinates for the line representing the drone's suggested movement */
+        /* ]]Coordinates for the line representing the drone's suggested movement */
         var X1 = this.coordinateA.longitude;
         var Y1 = this.coordinateA.latitude;
         var X2 = this.coordinateB.longitude;
@@ -48,6 +46,7 @@ public class Line {
         var Y3 = boundary.getCoordinateA().latitude;
         var X4 = boundary.getCoordinateB().longitude;
         var Y4 = boundary.getCoordinateB().latitude;
+        
         /* Check if there are any possible longitude values where the lines could intersect */
         if ( Math.max(X1, X2) < Math.min(X3, X4)) {
             return false;
@@ -75,6 +74,7 @@ public class Line {
             
             /* Check if the two lines are parallel */
             if (m1 == m2) {
+                System.out.println("parallel");
                 return false;
             }
             
@@ -82,30 +82,16 @@ public class Line {
             var Xi = (c2 - c1) / (m1 - m2);
             var Yi1 = (m1 * Xi) + c1;
             var Yi2 = (m2 * Xi) + c2;
-            
-//            System.out.println("Yi1: " + Yi1);
-//            System.out.println("Yi2: " + Yi2);
-            
-            /* To account for imprecise double arithmetic, 'truncate' Yi2 and Yi1 to check if equal 
-             * to 14 d.p. */
-            var bigDecimalYi1 = new BigDecimal(Yi1).setScale(14, RoundingMode.HALF_UP);
-            var bigDecimalYi2 = new BigDecimal(Yi2).setScale(14, RoundingMode.HALF_UP);
-            
-            //System.out.println("big dec Yi1: " + bigDecimalYi1.toString());
-            //System.out.println("big dec Yi2: " + bigDecimalYi2.toString());
-            
-            /* If the point lies on both lines, check if it is within the X value interval of the
-             * ling segments. */
-            if (bigDecimalYi1.equals(bigDecimalYi2)) {
-                if ((Xi < Math.max(Math.min(X1, X2), Math.min(X3, X4))) 
-                        || (Xi > Math.min(Math.max(X1, X2), Math.max(X3, X4)))) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
+
+          if (Math.abs(Yi1 - Yi2) < this.THRESHOLD) {
+              if ((Xi < Math.max(Math.min(X1, X2), Math.min(X3, X4))) 
+                      || (Xi > Math.min(Math.max(X1, X2), Math.max(X3, X4)))) {
+                  return false;
+              } else {
+                  return true;
+              }
+          }
         }
-        //System.out.println("default");
         return false;
     }
 

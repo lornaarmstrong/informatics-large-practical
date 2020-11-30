@@ -199,19 +199,6 @@ public class Drone {
         }
         return false;
     }
-    
-//	private int getNewAngleClockwiseNoLoop(int direction, Coordinate previousPosition, Coordinate startPoint) {
-//	    direction = direction + 10;
-//	    
-//	    if (startPoint.getNextPosition(direction, moveLength).equals(previousPosition)) {
-//	        // Check if any other angle works
-//	        // if it does, return that
-//	        getNewAngleClockwiseNoLoop
-//	        // else, return the angle
-//	    }
-//	        
-//        return 0;
-//    }
 
     /*
 	 * Move the drone, update its position and add the new position coordinates to route
@@ -224,12 +211,13 @@ public class Drone {
 	    
 	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition) || proposedNextPosition.isInNoFlyZone(map)) {   
 	        var newDirection = getNewAngleClockwise(direction);
+	        //System.out.println(newDirection + " = new direction");
 	        moveDrone(newDirection);
 	    } else if (repeatedMove(proposedNextPoint, currentPoint)){
-	        var newDirection = getNewAngleClockwise(direction + 50);
+	        var newDirection = getNewAngleClockwise(direction + 20);
 	        moveDrone(newDirection);
 	    } else {
-	        
+	        System.out.println("New position: " + proposedNextPosition + " " + direction);
 	        var flightPath = currentPosition.longitude + "," + currentPosition.latitude + ","
                         + direction + "," + proposedNextPosition.longitude + "," 
                         + proposedNextPosition.latitude;
@@ -250,7 +238,7 @@ public class Drone {
 	            }
 	        }   
 	        if (!readingTaken) {
-	            flightPath += ",null";
+	            flightPath += "," + null;
 	        }
 	        // Add the flightPathInfo string
 	        App.flightpathInformation.add(flightPath);
@@ -266,7 +254,6 @@ public class Drone {
                 var pointA = route.get(route.size() - i);
                 var pointB = route.get(route.size() - (i + 1));
                 if (pointA.equals(proposedNext) && pointB.equals(current)) {
-                    // the drone has done this move
                     return true;
                 }
             }
@@ -304,7 +291,7 @@ public class Drone {
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
 	        var moveIntersects = moveLine.isIntersecting(boundary);
-	        //System.out.println("Boundary: " + boundary.toString() + "    intersects: " + moveLine.toString() + "  " + moveIntersects);
+	        System.out.println("Boundary: " + boundary.toString() + "    intersects: " + moveLine.toString() + "  " + moveIntersects);
 	        if (moveIntersects) {
 	            return true; // since the proposed move crosses a boundary
 	        }

@@ -35,9 +35,9 @@ public class App
         String day = args[0];
         String month = args[1];
         String year = args[2];
-        double startLatitude = Double.parseDouble(args[3]);
-        double startLongitude = Double.parseDouble(args[4]);
-        int seed = Integer.parseInt(args[5]);
+        var startLatitude = Double.parseDouble(args[3]);
+        var startLongitude = Double.parseDouble(args[4]);
+        var seed = Integer.parseInt(args[5]);
         portNumber = Integer.parseInt(args[6]);
         
         // Set up the map and fetch all necessary data from the server
@@ -74,6 +74,10 @@ public class App
         
 //        Coordinate coordA = new Coordinate(55.944814194573425,-3.186650430596607);
 //        Coordinate coordB = new Coordinate(55.94510963689933,-3.186702525049907);
+//        System.out.println(drone.moveInterceptsNoFly(coordA, coordB));
+        
+//        Coordinate coordA = new Coordinate(55.94544163214824,-3.1879926168071946);
+//        Coordinate coordB = new Coordinate(55.94514618982233,-3.1880447112604946);
 //        System.out.println(drone.moveInterceptsNoFly(coordA, coordB));
         
         
