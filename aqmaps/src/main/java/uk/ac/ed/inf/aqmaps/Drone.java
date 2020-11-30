@@ -213,13 +213,25 @@ public class Drone {
 	        coordinateAngleTracker.put(currentPosition, integerDirection);
 	        // Check if this new position is in range of the destination sensor
 	        if (sensors.size() > 0) {
-	            var sensor = sensors.get(0);
-	            if (withinSensorRange(sensor)) {
-	                takeReading(sensor);
-	                flightPath += "," + sensor.getLocation();
-	                readingTaken = true;
-	                sensors.remove(0);
+	            
+	            for (int i = 0; i < sensors.size(); i++) {
+	                var sensor = sensors.get(i);
+	                if (withinSensorRange(sensor)) {
+	                    takeReading(sensor);
+	                    flightPath += "," + sensor.getLocation();
+	                    readingTaken = true;
+	                    sensors.remove(i);
+	                    break;
+	                }
 	            }
+	            
+//	            var sensor = sensors.get(0);
+//	            if (withinSensorRange(sensor)) {
+//	                takeReading(sensor);
+//	                flightPath += "," + sensor.getLocation();
+//	                readingTaken = true;
+//	                sensors.remove(0);
+//	            }
 	        }   
 	        if (!readingTaken) {
 	            flightPath += "," + null;
