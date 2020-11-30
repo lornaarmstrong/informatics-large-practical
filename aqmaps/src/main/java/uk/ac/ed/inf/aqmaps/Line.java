@@ -1,8 +1,8 @@
 package uk.ac.ed.inf.aqmaps;
 
 /**
- * This class represents an object as Line, with two sets
- * coordinates (one for each end of the line) as attributes.
+ * This class represents an object as Line, with two sets of coordinates (one for each end of the 
+ * line) as attributes and a threshold to determine tolerance when comparing double values.
  */
 public class Line {
 
@@ -82,7 +82,8 @@ public class Line {
             
             // Check if (X,Y) lies in the interval of the line segments
             if (Math.abs(possibleY - possibleY2) < this.THRESHOLD) {
-              if ( X < Math.max(Math.min(X1, X2), Math.min(X3, X4)) || X > Math.min(Math.max(X1, X2), Math.max(X3, X4))) {
+              if ( X < Math.max(Math.min(X1, X2), Math.min(X3, X4)) 
+                      || X > Math.min(Math.max(X1, X2), Math.max(X3, X4))) {
                   return false;
               } else {
                   return true;
