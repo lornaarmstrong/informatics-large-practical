@@ -21,13 +21,11 @@ import java.util.Map;
 public class App 
 {
     public static List<Sensor> sensorList = new ArrayList<Sensor>();
-    public static ArrayList<Sensor> sensorsInOrder = new ArrayList<Sensor>();
+    public static List<Sensor> sensorsInOrder = new ArrayList<Sensor>();
     public static int portNumber;
     public static Drone drone;
     public static List<String> flightpathInformation = new ArrayList<String>();
     public static List<Point> idealRoute = new ArrayList<Point>();
-    public static double[][] distanceMatrix = new double [34][34];
-    public static List<LineString> buildingLines = new ArrayList<LineString>();
     
     public static void main( String[] args ) throws Exception {
         
@@ -55,15 +53,14 @@ public class App
         var startPosition = new Coordinate(startLatitude, startLongitude);
         drone = new Drone(startPosition, map);
         System.out.println("Drone starting position: " + startPosition.toString());
-        calculateDistanceMatrix();
-        //calculateDistanceMatrix(startPosition);
+        map.calculateDistanceMatrix(startPosition);
                
         // Find nearest node J, move to it, and build the partial tour (I, J)
-        var nearestSensor = findNearestSensor(startPosition);
+        var nearestSensor = findNearestSensor(startPosition, map);
         sensorsInOrder.add(nearestSensor);
        
         while (sensorsInOrder.size() < sensorList.size()) {
-            var nextSensorToInclude = selectNearestSensor();
+            var nextSensorToInclude = selectNearestSensor(map);
             insertIntoOrder(nextSensorToInclude);
         }
         
@@ -72,18 +69,6 @@ public class App
         drone.startRoute();
         drone.visitSensors();
         
-//        Coordinate coordA = new Coordinate(55.944814194573425,-3.186650430596607);
-//        Coordinate coordB = new Coordinate(55.94510963689933,-3.186702525049907);
-//        System.out.println(drone.moveInterceptsNoFly(coordA, coordB));
-        
-//        Coordinate coordA = new Coordinate(55.94544163214824,-3.1879926168071946);
-//        Coordinate coordB = new Coordinate(55.94514618982233,-3.1880447112604946);
-//        System.out.println(drone.moveInterceptsNoFly(coordA, coordB));
-        
-        
-//        Coordinate lastSensor = new Coordinate(55.9454, -3.1888);
-//        countMoves();
-        
 //        // The 'expected' route (calculated using Nearest Insertion)
 //        idealRoute.add(startPoint);
 //        for (int i = 0; i < sensorsInOrder.size(); i++) {
@@ -91,21 +76,7 @@ public class App
 //            Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
 //            idealRoute.add(sensorCoordinate);
 //        }
-//        idealRoute.add(startPoint);
-        
-        // CHECKING -- PRINTING START LOCATION
-//        var pointStart = Point.fromLngLat(startLongitude, startLatitude);
-//        var startGeometry = (Geometry) pointStart;
-//        var startFeature = Feature.fromGeometry(startGeometry);
-//        startFeature.addStringProperty("rgb-string", "#000000");
-//        startFeature.addStringProperty("marker-color", "#000000");
-//        startFeature.addStringProperty("marker-symbol", "lighthouse");
-//        markerFeatures.add(startFeature);
-//        // CHECKING -- PRINTING ALL PATH SO FAR
-//        var pathLine = LineString.fromLngLats(idealRoute);
-//        var pathGeometry = (Geometry) pathLine;
-//        var pathFeature = Feature.fromGeometry(pathGeometry);
-//        markerFeatures.add(pathFeature);        
+//        idealRoute.add(startPoint); 
         
         // Sensors and drone path for readings file
         var features = createMarkers(map);
@@ -114,11 +85,10 @@ public class App
         var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
         features.add(dronePathFeature);
         
-        for (Feature feature: map.noFlyZones) {
+        for (var feature: map.noFlyZones) {
             features.add(feature);
         }
         var allFeatures = FeatureCollection.fromFeatures(features);
-        
         
         // Output Files
         var flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
@@ -136,36 +106,6 @@ public class App
         // Print out the number of moves remaining
         System.out.println("Total number of moves: " + (150 - drone.getMoves()));
         System.out.println("End location of drone: "  + drone.getCurrentPosition());
-    }
-    
-    /*
-     * Fill a 34 x 34 grid with the distances from all sensors to each other sensor, and all sensors
-     * to the start.
-     */
-    public static void calculateDistanceMatrix() throws IOException, InterruptedException {
-        for (int i = 0; i < distanceMatrix.length; i++) {
-            for (int j = 0; j < distanceMatrix.length; j++) {
-                if (i == j) {
-                    distanceMatrix[i][j] = 100;
-                } else {
-                    Coordinate destination;
-                    Coordinate startFrom;
-                    if (i == 0) {
-                        destination = sensorList.get(j - 1).getPosition();
-                        startFrom = drone.startPosition;
-                    } else {
-                        if (j == 0) {
-                            destination = drone.startPosition;
-                            startFrom = sensorList.get(i - 1).getPosition();
-                        } else {
-                            startFrom = sensorList.get(i - 1).getPosition();
-                            destination = sensorList.get(j - 1).getPosition();
-                        }
-                    }
-                    distanceMatrix[i][j] = startFrom.getEuclideanDistance(destination);
-                }
-            }
-        }
     }
 
     /*
@@ -247,7 +187,7 @@ public class App
      * Find the sensor that is closest to any sensor that is already in the sensorsInOrder list (has already been added)
      * or to the start
      */
-    public static Sensor selectNearestSensor() throws IOException, InterruptedException {
+    public static Sensor selectNearestSensor(CampusMap map) throws IOException, InterruptedException {
         Sensor nextSensorToInclude = null;
         var sensorDistancePair = new HashMap<Sensor, Double>();
         
@@ -261,7 +201,7 @@ public class App
                 // Calculate distance to each sensor in sensorsInOrder and save the shortest
                 for (int i = 0; i < sensorsInOrder.size(); i++) {
                     var sensorAdded = sensorsInOrder.get(i);
-                    distance = distanceMatrix[sensorList.indexOf(sensorAdded) + 1][ sensorList.indexOf(currentSensor) + 1];
+                    distance = map.distanceMatrix[sensorList.indexOf(sensorAdded) + 1][ sensorList.indexOf(currentSensor) + 1];
                     if (i == 0) {
                         shortestDistance = distance;
                     } else {
@@ -370,17 +310,13 @@ public class App
     /*
      * Loops through all sensors and finds the sensor closest to passed-in point
      */
-    public static Sensor findNearestSensor(Coordinate currentNode) throws IOException, InterruptedException {
+    public static Sensor findNearestSensor(Coordinate currentNode, CampusMap map) throws IOException, InterruptedException {
         var shortestDistance = 0.0;
         Sensor nextNode = null; // default to null
         var counter = 0; 
-        for (int i = 0; i < distanceMatrix.length - 1; i++) {
-            var distance = distanceMatrix[0][i + 1];
-            if (counter == 0) {
-                shortestDistance = distance;
-                nextNode = sensorList.get(i);
-            }
-            if (distance < shortestDistance) {
+        for (int i = 0; i < map.distanceMatrix.length - 1; i++) {
+            var distance = map.distanceMatrix[0][i + 1];
+            if (distance < shortestDistance || counter == 0) {
                 shortestDistance = distance;
                 nextNode = sensorList.get(i);
             }

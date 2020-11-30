@@ -12,14 +12,17 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * CampusMap class represents a map of Sensors and No Fly Zones on a specific day
+ */
 public class CampusMap {
     
-    private String day;
-    private String month;
-    private String year;
-    public List<Sensor> sensors = new ArrayList<Sensor>();
-    public List<Feature> noFlyZones = new ArrayList<Feature>();
-    public static double[][] distanceMatrix = new double [34][34];
+    private final String day;
+    private final String month;
+    private final String year;
+    public final List<Sensor> sensors = new ArrayList<Sensor>();
+    public final List<Feature> noFlyZones = new ArrayList<Feature>();
+    public final double[][] distanceMatrix = new double [34][34];
     
     public CampusMap(String day, String month, String year) {
         this.day = day;
@@ -28,27 +31,26 @@ public class CampusMap {
     }
     
     /*
-     * Get the list of all sensors to be visited on the given date (from input) 
+     * Get list of all sensors to be visited, from the server, using passed-in portNumber.
      */
     public void getSensorListFromServer(int portNumber) throws IOException, InterruptedException {
-        System.out.println("Getting sensor list from server");
+        System.out.println("Retrieving list of sensors from server.");
         var client = HttpClient.newHttpClient();
         var request = HttpRequest.newBuilder()
-                .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/air-quality-data.json", 
-                        portNumber,this.year,this.month,this.day)))
+                .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/" 
+                        + "air-quality-data.json", portNumber,this.year,this.month,this.day)))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
         var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThisDay = new Gson().fromJson(response.body(), listType);
-        // Adds each sensor to be visited into the sensors list
         for (var sensor: sensorsForThisDay) {
             sensors.add(sensor);
         }
-        System.out.println("Number of sensors " + sensors.size());
+        System.out.println("Number of sensors retrieved from server: " + sensors.size());
     }
     
     /*
-     * Get the list of all polygons representing the buildings in the no-fly zone 
+     * Get the list of all polygons representing the No-Fly Zone buildings
      */
     public void getNoFlyZonesFromServer(int portNumber) throws IOException, InterruptedException {
         var client = HttpClient.newHttpClient();
@@ -62,6 +64,7 @@ public class CampusMap {
         for (var feature : featureList) {
             noFlyZones.add(feature);
         }
+        System.out.println("No Fly Zones retrieved from server: " + noFlyZones.size());
     }
     
     /*
@@ -69,10 +72,12 @@ public class CampusMap {
      * to the start.
      */
     public void calculateDistanceMatrix(Coordinate droneStartPosition) throws IOException, InterruptedException {
-        for (int i = 0; i < distanceMatrix.length; i++) {
-            for (int j = 0; j < distanceMatrix.length; j++) {
+        for (int i = 0; i < this.distanceMatrix.length; i++) {
+            for (int j = 0; j < this.distanceMatrix.length; j++) {
                 if (i == j) {
-                    distanceMatrix[i][j] = 100;
+                    /* Set distance from i to itself to be a large number to avoid using in 
+                      minimum distance algorithm */
+                    this.distanceMatrix[i][j] = 1000;
                 } else {
                     Coordinate destination;
                     Coordinate startFrom;
@@ -88,7 +93,7 @@ public class CampusMap {
                             destination = sensors.get(j - 1).getPosition();
                         }
                     }
-                    distanceMatrix[i][j] = startFrom.getEuclideanDistance(destination);
+                    this.distanceMatrix[i][j] = startFrom.getEuclideanDistance(destination);
                 }
             }
         }

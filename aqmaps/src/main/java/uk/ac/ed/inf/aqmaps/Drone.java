@@ -6,6 +6,7 @@ import com.mapbox.geojson.Polygon;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,14 +21,14 @@ public class Drone {
 	private int moves = 150;
 	public final double moveLength = 0.0003;
 	public boolean returningToStart;
-	public ArrayList<Point> route = new ArrayList<Point>();
+	public List<Point> route = new ArrayList<Point>();
 	
 	public HashMap<Coordinate,Integer> coordinateAngleTracker = new HashMap<Coordinate, Integer>();
 	public HashMap<Coordinate,Integer> temporaryTracker = new HashMap<Coordinate, Integer>();
 	
-	public ArrayList<Coordinate> routeForCounting = new ArrayList<Coordinate>();
-	public ArrayList<Sensor> sensors = new ArrayList<Sensor>();
-	public ArrayList<Sensor> checkedSensors = new ArrayList<Sensor>();
+	public List<Coordinate> routeForCounting = new ArrayList<Coordinate>();
+	public List<Sensor> sensors = new ArrayList<Sensor>();
+	public List<Sensor> checkedSensors = new ArrayList<Sensor>();
 	private final CampusMap map;
 	
 	public Drone(Coordinate startPosition, CampusMap map) {
@@ -62,11 +63,11 @@ public class Drone {
 	    this.moves = moves;
 	}
 	
-	public void setSensors(ArrayList<Sensor> sensors) {
+	public void setSensors(List<Sensor> sensors) {
 	    this.sensors = sensors;
 	}
 	
-	public ArrayList<Sensor> getSensors() {
+	public List<Sensor> getSensors() {
 	    return this.sensors;
 	}
 	
@@ -175,23 +176,6 @@ public class Drone {
 //        }
 //        return movesCount;
 //    }
-	
-    
-    /*
-     * Sometimes, when going round a building, the drone gets stuck in a loop. The drone can't go back to the same position it has come from
-     * unless there's no other options
-     */
-    // the drone hits a dead end
-//    public boolean isInLoop(Coordinate firstVisited, Integer angleToFirst, Coordinate secondVisited, Integer angleToSecond) {
-//        angleToFirst = angleToFirst.intValue();
-//        angleToSecond = angleToSecond.intValue();
-//        
-//        if ( angleToFirst == (angleToSecond + 180) ) {
-//            return true; // the drone has looped
-//        }
-//        
-//        return false;
-//    }
     
     public boolean isStuckInLoop(Coordinate firstVisited, Coordinate secondVisited, Coordinate thirdVisited) {
         if (firstVisited == thirdVisited) {
@@ -217,7 +201,7 @@ public class Drone {
 	        var newDirection = getNewAngleClockwise(direction + 20);
 	        moveDrone(newDirection);
 	    } else {
-	        System.out.println("New position: " + proposedNextPosition + " " + direction);
+	        //System.out.println("New position: " + proposedNextPosition + " " + direction);
 	        var flightPath = currentPosition.longitude + "," + currentPosition.latitude + ","
                         + direction + "," + proposedNextPosition.longitude + "," 
                         + proposedNextPosition.latitude;
@@ -291,7 +275,7 @@ public class Drone {
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
 	        var moveIntersects = moveLine.isIntersecting(boundary);
-	        System.out.println("Boundary: " + boundary.toString() + "    intersects: " + moveLine.toString() + "  " + moveIntersects);
+	        //System.out.println("Boundary: " + boundary.toString() + "    intersects: " + moveLine.toString() + "  " + moveIntersects);
 	        if (moveIntersects) {
 	            return true; // since the proposed move crosses a boundary
 	        }
