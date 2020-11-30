@@ -36,61 +36,58 @@ public class Line {
      * Checks if the line intersects with a passed-in line
      */
     public boolean isIntersecting(Line boundary) {
-        /* ]]Coordinates for the line representing the drone's suggested movement */
+        
         var X1 = this.coordinateA.longitude;
         var Y1 = this.coordinateA.latitude;
         var X2 = this.coordinateB.longitude;
         var Y2 = this.coordinateB.latitude;
-        /* Coordinates for the line representing the boundary */
+      
         var X3 = boundary.getCoordinateA().longitude;
         var Y3 = boundary.getCoordinateA().latitude;
         var X4 = boundary.getCoordinateB().longitude;
         var Y4 = boundary.getCoordinateB().latitude;
         
-        /* Check if there are any possible longitude values where the lines could intersect */
+        // Check if there is any overlap in the X values of the two lines
         if ( Math.max(X1, X2) < Math.min(X3, X4)) {
             return false;
         }
-        /* If either line has an infinite gradient, check if one point of the other line 
-        falls on either side. */
-        if ( X1 - X2 == 0 ) {
+        // Check if either line has an infinite gradient
+        // If so, check if the points of the other line lie either side of the line.
+        else if ( X1 - X2 == 0 ) {
             if ( Math.min(X3, X4) <= X1 && Math.max(X3, X4) >= X1) {
                 return true;
             }
-        } else if (X3 - X4 == 0) {
+        } 
+        else if (X3 - X4 == 0) {
             if (Math.min(X1, X2) <= X3 && Math.max(X1, X2) >= X3){
                 return true;
             }
         }
-        /* Use the equation of a line, y = mx + c, to form the infinite lines passing through both
-         * points. Check if the lines intersect at any point, then check if the point is within
-         * the interval of the two line segments.
-         */
+        // Use y = mx + c to form the infinite lines passing through the line segments.
         else {
             var m1 = (Y1 - Y2) / ( X1 - X2);
             var m2 = (Y3 - Y4) / (X3 - X4);
             var c1 = Y1 - (m1 * X1);
             var c2 = Y3 - (m2 * X3);
             
-            /* Check if the two lines are parallel */
+            // Check if the two lines have the same gradient
             if (m1 == m2) {
-                System.out.println("parallel");
                 return false;
             }
             
-            /* A point (Xi, Yi) of intersection lying on both lines must fit both line equations */
-            var Xi = (c2 - c1) / (m1 - m2);
-            var Yi1 = (m1 * Xi) + c1;
-            var Yi2 = (m2 * Xi) + c2;
-
-          if (Math.abs(Yi1 - Yi2) < this.THRESHOLD) {
-              if ((Xi < Math.max(Math.min(X1, X2), Math.min(X3, X4))) 
-                      || (Xi > Math.min(Math.max(X1, X2), Math.max(X3, X4)))) {
+            // Check if (X,Y) lies on both lines and is the intersection point.
+            var X = (c2 - c1) / (m1 - m2);
+            var possibleY = (m1 * X) + c1;
+            var possibleY2 = (m2 * X) + c2;
+            
+            // Check if (X,Y) lies in the interval of the line segments
+            if (Math.abs(possibleY - possibleY2) < this.THRESHOLD) {
+              if ( X < Math.max(Math.min(X1, X2), Math.min(X3, X4)) || X > Math.min(Math.max(X1, X2), Math.max(X3, X4))) {
                   return false;
               } else {
                   return true;
               }
-          }
+            }
         }
         return false;
     }
@@ -99,6 +96,6 @@ public class Line {
      * Useful method for use with testing and debugging
      */
     public String toString() {
-        return ("line: " + coordinateB.toString() + " to " + coordinateA.toString());
+        return (coordinateB.toString() + " -> " + coordinateA.toString());
     }
 }
