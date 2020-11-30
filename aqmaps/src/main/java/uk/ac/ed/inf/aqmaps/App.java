@@ -20,17 +20,18 @@ import java.util.Map;
  */
 public class App 
 {
-    public static List<Sensor> sensorList = new ArrayList<Sensor>(); // list of all sensors to be visited in the day
-    public static ArrayList<Sensor> sensorsInOrder = new ArrayList<Sensor>(); // list of all sensors in the order they should be visited
+    public static List<Sensor> sensorList = new ArrayList<Sensor>();
+    public static ArrayList<Sensor> sensorsInOrder = new ArrayList<Sensor>();
     public static int portNumber;
     public static Drone drone;
     public static List<String> flightpathInformation = new ArrayList<String>();
-    public static List<Point> idealRoute = new ArrayList<Point>(); // the ideal route for the drone to take; connected sensor cycle.
+    public static List<Point> idealRoute = new ArrayList<Point>();
     public static double[][] distanceMatrix = new double [34][34];
     public static List<LineString> buildingLines = new ArrayList<LineString>();
     
     public static void main( String[] args ) throws Exception {
-        // Get the input 
+        
+        // Get the input data
         String day = args[0];
         String month = args[1];
         String year = args[2];
@@ -40,18 +41,18 @@ public class App
         portNumber = Integer.parseInt(args[6]);
         
         // Set up the map and fetch all necessary data from the server
-        CampusMap map = new CampusMap(day, month, year);
+        var map = new CampusMap(day, month, year);
         map.getSensorListFromServer(portNumber);
-        sensorList = map.sensors.subList(0,33); // Ensures only 33 sensors are read
+        sensorList = map.sensors.subList(0,33); // Ensures only 33 sensors are added to the list for the day
         map.getNoFlyZonesFromServer(portNumber);
         
         // Get the latitude and longitude values of each sensor using the server and store
-        for (Sensor sensor: sensorList) {
+        for (var sensor: sensorList) {
             sensor.translateWhat3Words();
         }
         
         // Create the drone's starting point and drone instance
-        Coordinate startPosition = new Coordinate(startLatitude, startLongitude);
+        var startPosition = new Coordinate(startLatitude, startLongitude);
         drone = new Drone(startPosition, map);
         System.out.println("Drone starting position: " + startPosition.toString());
         calculateDistanceMatrix();
@@ -71,7 +72,10 @@ public class App
         drone.startRoute();
         drone.visitSensors();
         
-        System.out.println(drone.getMoves());
+//        Coordinate coordA = new Coordinate(55.944814194573425,-3.186650430596607);
+//        Coordinate coordB = new Coordinate(55.94510963689933,-3.186702525049907);
+//        System.out.println(drone.moveInterceptsNoFly(coordA, coordB));
+        
         
 //        Coordinate lastSensor = new Coordinate(55.9454, -3.1888);
 //        countMoves();
@@ -97,15 +101,7 @@ public class App
 //        var pathLine = LineString.fromLngLats(idealRoute);
 //        var pathGeometry = (Geometry) pathLine;
 //        var pathFeature = Feature.fromGeometry(pathGeometry);
-//        markerFeatures.add(pathFeature);
-        // CHECKING -- PRINT ALL SENSORS
-//        for (Sensor sensor: sensorList) {
-//            Point sensorPoint = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
-//            var markerGeometry = (Geometry) sensorPoint;
-//            var markerFeature = Feature.fromGeometry(markerGeometry);
-//            markerFeature.addStringProperty("marker-color", "#0000FF");
-//            markerFeatures.add(markerFeature);
-//        }
+//        markerFeatures.add(pathFeature);        
         
         // Sensors and drone path for readings file
         var features = createMarkers(map);
@@ -113,13 +109,18 @@ public class App
         var dronePathGeometry = (Geometry) dronePathLine;
         var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
         features.add(dronePathFeature);
+        
+        for (Feature feature: map.noFlyZones) {
+            features.add(feature);
+        }
         var allFeatures = FeatureCollection.fromFeatures(features);
         
-        // Output Files
-        String flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
-        String readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
         
-        FileWriter fileWriter = new FileWriter(flightpathFile);
+        // Output Files
+        var flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
+        var readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
+        
+        var fileWriter = new FileWriter(flightpathFile);
         for (int i = 0; i < flightpathInformation.size(); i ++) {
             fileWriter.write( (i+1) + "," + flightpathInformation.get(i) + "\n");
         }
@@ -129,7 +130,8 @@ public class App
         writeJsonFile(readingsFile, allFeatures.toJson());
         
         // Print out the number of moves remaining
-        System.out.println("Total moves taken by drone: " + (150 - drone.getMoves()));
+        System.out.println("Total number of moves: " + (150 - drone.getMoves()));
+        System.out.println("End location of drone: "  + drone.getCurrentPosition());
     }
     
     /*
@@ -387,7 +389,7 @@ public class App
      */
     public static void writeJsonFile(String filename, String json) throws IOException {
         System.out.println("Writing to file " + filename);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+        var writer = new BufferedWriter(new FileWriter(filename));
         try {
             writer.write(json);
         } catch (IOException e) {
