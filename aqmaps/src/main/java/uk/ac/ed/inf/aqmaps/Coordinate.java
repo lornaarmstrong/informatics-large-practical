@@ -108,7 +108,6 @@ public class Coordinate {
         // Round up or down to the corresponding multiple of 10
         var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
         var angleRoundedUp = (int) ((10 - angleFromEast % 10) + angleFromEast);
-        //System.out.println(angleRoundedDown + " " + angleRoundedUp + " = " + angleDegrees);
         if ((angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
             return angleRoundedUp;
         } else {

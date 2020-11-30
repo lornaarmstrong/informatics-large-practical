@@ -38,15 +38,12 @@ public class CampusMap {
                         portNumber,this.year,this.month,this.day)))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
-        
         var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThisDay = new Gson().fromJson(response.body(), listType);
-        
         // Adds each sensor to be visited into the sensors list
-        for (Sensor sensor: sensorsForThisDay) {
+        for (var sensor: sensorsForThisDay) {
             sensors.add(sensor);
         }
-        
         System.out.println("Number of sensors " + sensors.size());
     }
     
@@ -59,11 +56,10 @@ public class CampusMap {
                 .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
-        FeatureCollection featureCollection = FeatureCollection.fromJson(response.body());
+        var featureCollection = FeatureCollection.fromJson(response.body());
         List<Feature> featureList = featureCollection.features();
-        
         // Adds each feature to the list of No Fly Zones
-        for (Feature feature : featureList) {
+        for (var feature : featureList) {
             noFlyZones.add(feature);
         }
     }
@@ -97,5 +93,4 @@ public class CampusMap {
             }
         }
     }
-    
 }

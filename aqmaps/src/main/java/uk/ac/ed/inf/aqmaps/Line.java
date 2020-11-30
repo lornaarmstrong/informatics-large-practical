@@ -83,10 +83,16 @@ public class Line {
             var Yi1 = (m1 * Xi) + c1;
             var Yi2 = (m2 * Xi) + c2;
             
+//            System.out.println("Yi1: " + Yi1);
+//            System.out.println("Yi2: " + Yi2);
+            
             /* To account for imprecise double arithmetic, 'truncate' Yi2 and Yi1 to check if equal 
              * to 14 d.p. */
-            var bigDecimalYi1 = new BigDecimal(Yi1).setScale(14, RoundingMode.DOWN);
-            var bigDecimalYi2 = new BigDecimal(Yi2).setScale(14, RoundingMode.DOWN);
+            var bigDecimalYi1 = new BigDecimal(Yi1).setScale(14, RoundingMode.HALF_UP);
+            var bigDecimalYi2 = new BigDecimal(Yi2).setScale(14, RoundingMode.HALF_UP);
+            
+            //System.out.println("big dec Yi1: " + bigDecimalYi1.toString());
+            //System.out.println("big dec Yi2: " + bigDecimalYi2.toString());
             
             /* If the point lies on both lines, check if it is within the X value interval of the
              * ling segments. */
@@ -99,9 +105,10 @@ public class Line {
                 }
             }
         }
+        //System.out.println("default");
         return false;
     }
-    
+
     /*
      * Useful method for use with testing and debugging
      */
