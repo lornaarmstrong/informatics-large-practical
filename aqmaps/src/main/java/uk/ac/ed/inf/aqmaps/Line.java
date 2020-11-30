@@ -81,7 +81,7 @@ public class Line {
             var possibleY2 = (m2 * X) + c2;
             
             // Check if (X,Y) lies in the interval of the line segments
-            if (Math.abs(possibleY - possibleY2) < this.THRESHOLD) {
+            if (Math.abs(possibleY - possibleY2) < THRESHOLD) {
               if ( X < Math.max(Math.min(X1, X2), Math.min(X3, X4)) 
                       || X > Math.min(Math.max(X1, X2), Math.max(X3, X4))) {
                   return false;
