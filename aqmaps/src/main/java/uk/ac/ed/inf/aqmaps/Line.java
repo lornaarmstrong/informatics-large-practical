@@ -8,7 +8,7 @@ public class Line {
 
     private Coordinate coordinateA;
     private Coordinate coordinateB;
-    private final double THRESHOLD = 0.0000000000001;
+    private static final double THRESHOLD = 0.0000000000001;
     
     public Line(Coordinate coordinateA, Coordinate coordinateB) {
         this.coordinateA = coordinateA;
