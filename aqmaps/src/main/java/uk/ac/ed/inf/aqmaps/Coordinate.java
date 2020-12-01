@@ -1,11 +1,6 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.io.IOException;
-
-import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
-import com.mapbox.geojson.Polygon;
-import com.mapbox.turf.TurfJoins;
 
 /**
  * Coordinate class, as pairs of latitude and longitude values
@@ -32,58 +27,32 @@ public class Coordinate {
 	}
 	
 	/*
-	 * equals method
-	 */
-	private boolean equals(Coordinate coord) {
-		return ((this.latitude == coord.latitude) && (this.longitude == coord.longitude));
-	}
-	
-	/*
 	 * Check if the coordinate is in the confinement area
 	 */
 	public boolean isInConfinementZone() {
-		boolean permittedLatitude;
-		boolean permittedLongitude;
-		permittedLatitude = 55.942617 < latitude && latitude < 55.946233;
-		permittedLongitude = -3.192473 < longitude && longitude < -3.184319;
+		var permittedLatitude = 55.942617 < this.latitude && this.latitude < 55.946233;
+		var permittedLongitude = -3.192473 < this.longitude && this.longitude < -3.184319;
 		return (permittedLatitude && permittedLongitude);
 	}
-    
-    /*
-     * Check if the coordinate is in a forbidden zone
-     */
-    public boolean isInNoFlyZone(CampusMap map) {
-        for (Feature feature: map.noFlyZones) {
-            Polygon polygon = (Polygon) feature.geometry();
-            Point point = Point.fromLngLat(this.longitude, this.latitude);
-            boolean isInside = TurfJoins.inside(point, polygon);
-            if (isInside) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
+	
     /*
      *  Calculate Euclidean distance between currentNode and sensor
      */
     public double getEuclideanDistance(Coordinate coordinate) { 
         var y1 = this.latitude;
         var x1 = this.longitude;
-        var y2 = coordinate.latitude;
-        var x2 = coordinate.longitude;
+        var y2 = coordinate.getLatitude();
+        var x2 = coordinate.getLongitude();
         var distance = Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
         return distance;
     }
     
     /*
-     * Returns the angle from the coordinate to the passed in coordinate, rounded to
-     * a multiple of 10.
+     * Calculate the angle to the passed-in coordinate.
      */
-    public int getAngle(Coordinate destination) throws IOException, InterruptedException {
-        // Calculate the angle of the line needed to get to the sensor
-        var yDistance = destination.latitude - this.latitude;
-        var xDistance = destination.longitude - this.longitude;
+    public int getAngle(Coordinate destination) {
+        var yDistance = destination.getLatitude() - this.latitude;
+        var xDistance = destination.getLongitude() - this.longitude;
         var angleRadians = Math.atan(yDistance / xDistance);
         var angleDegrees = Math.toDegrees(angleRadians);
         var angleFromEast = 0.0;
@@ -97,7 +66,7 @@ public class Coordinate {
         } else if (xDistance > 0 && yDistance < 0) {
             angleFromEast = 360 - (Math.abs(angleDegrees));
         }
-        // Round up or down to the corresponding multiple of 10
+        // Round the angle up or down to the corresponding multiple of 10
         var angleRoundedDown = (int) (angleFromEast - angleFromEast % 10);
         var angleRoundedUp = (int) ((10 - angleFromEast % 10) + angleFromEast);
         if ((angleRoundedUp - angleFromEast) < (angleFromEast - angleRoundedDown)) {
@@ -119,15 +88,26 @@ public class Coordinate {
         return updatedPosition;
     }
     
+    /*
+     * Convert a Coordinate into a Point with the same latitude and longitude
+     */
     public Point toPoint() {
         var point = Point.fromLngLat(this.longitude, this.latitude);
         return point;
     }
     
     /*
+     * Equality comparison method
+     */
+    public boolean equals(Coordinate coordinate) {
+        return ((this.latitude == coordinate.getLatitude()) 
+                && (this.longitude == coordinate.getLongitude()));
+    }
+    
+    /*
      * A useful function that represents the coordinate as a string
      */
     public String toString() {
-        return (latitude + ", "  + longitude);
+        return (this.latitude + ", "  + this.longitude);
     }
 }

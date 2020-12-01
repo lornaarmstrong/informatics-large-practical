@@ -47,6 +47,7 @@ public class App
         for (var sensor: sensorList) {
             sensor.translateLocation();
         }
+        map.removeOutsideSensors();
         
         // Create the drone's starting point and drone instance
         var startPosition = new Coordinate(startLatitude, startLongitude);

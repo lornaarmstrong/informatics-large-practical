@@ -50,8 +50,22 @@ public class CampusMap {
     }
     
     /*
+     * Remove any sensors that are outside the confinement zone
+     */
+    public void removeOutsideSensors() {
+        for (var sensor: sensors) {
+            if (!sensor.getCoordinate().isInConfinementZone()) {
+                sensors.remove(sensor);
+                System.out.println("Sensor " + sensor.getLocation() 
+                        + " is removed (outside confinement area)");
+            }
+        }
+    }
+    
+    /*
      * Get the list of all polygons representing the No-Fly Zone buildings, from the server.
      */
+    
     public void getNoFlyZonesFromServer(int portNumber) throws IOException, InterruptedException {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))

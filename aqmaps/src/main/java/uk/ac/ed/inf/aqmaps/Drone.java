@@ -182,8 +182,7 @@ public class Drone {
 	    var proposedNextPoint = proposedNextPosition.toPoint();
 	    var currentPoint = this.currentPosition.toPoint();
 	    var readingTaken = false;
-	    
-	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition) || proposedNextPosition.isInNoFlyZone(map)) {   
+	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)) {   
 	        var newDirection = getNewAngleClockwise(direction);
 	        moveDrone(newDirection);
 	    } else if (repeatedMove(proposedNextPoint, currentPoint)){
