@@ -1,13 +1,16 @@
 package uk.ac.ed.inf.aqmaps;
 
+import com.google.gson.annotations.SerializedName;
 import com.mapbox.geojson.Point;
 
 /*
- * Coordinate class, as pairs of latitude and longitude values
+ * Coordinate class where a Coordinate is a pair of latitude and longitude values
  */
 public class Coordinate {
 	
+    @SerializedName("lat")
     private final double latitude;
+    @SerializedName("lng")
 	private final double longitude;
 	
 	// Constructor for Coordinate
@@ -16,7 +19,7 @@ public class Coordinate {
 		this.longitude = longitude;
 	}
 	
-	// Getters and Setters
+	// Getters
 	public double getLatitude() {
 		return this.latitude;
 	}

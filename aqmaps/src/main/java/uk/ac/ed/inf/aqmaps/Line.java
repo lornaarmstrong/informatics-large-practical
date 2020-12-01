@@ -43,20 +43,34 @@ public class Line {
         if ( Math.max(X1, X2) < Math.min(X3, X4)) {
             return false;
         }
-        // Check if either line has an infinite gradient
-        // If so, check if the points of the other line lie either side of the line.
-        else if ( X1 - X2 == 0 ) {
-            if ( Math.min(X3, X4) <= X1 && Math.max(X3, X4) >= X1) {
-                return true;
-            }
-        } 
-        else if (X3 - X4 == 0) {
-            if (Math.min(X1, X2) <= X3 && Math.max(X1, X2) >= X3){
-                return true;
-            }
-        }
         // Use y = mx + c to form the infinite lines passing through the line segments.
         else {
+            // Check if the gradient is infinite
+            if (X1 == X2) {
+                // see if X1 lies on the equation of the Y3, Y4 line
+                var m2 = (Y3 - Y4) / (X3 - X4);
+                var c2 = Y3 - (m2 * X3);
+                var yValueOfX1 = (m2 * X1) + c2;
+                
+                if (yValueOfX1 >= Math.min(Y1, Y2) && yValueOfX1 <= Math.max(Y1, Y2)) {
+                    return true;
+                } else {
+                    return false;
+                } 
+            }
+            if (X3 == X4) {
+                // see if X1 lies on the equation of the Y3, Y4 line
+                var m = (Y1 - Y2) / (X1 - X2);
+                var c = Y1 - (m * X1);
+                var yValueOfX3 = (m * X1) + c;
+                
+                if (yValueOfX3 > Math.min(Y3, Y4) && yValueOfX3 < Math.max(Y3, Y4)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } 
+            
             var m1 = (Y1 - Y2) / ( X1 - X2);
             var m2 = (Y3 - Y4) / (X3 - X4);
             var c1 = Y1 - (m1 * X1);

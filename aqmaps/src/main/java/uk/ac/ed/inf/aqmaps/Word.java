@@ -6,14 +6,14 @@ package uk.ac.ed.inf.aqmaps;
  */
 public class Word {
     
-	private LngLat coordinates;
+	private Coordinate coordinates;
 	
 	/* Getters and Setters */
-	public LngLat getCoordinates() {
+	public Coordinate getCoordinates() {
 		return this.coordinates;
 	}
 	
-	public void setCoordinates(LngLat coordinates) {
+	public void setCoordinates(Coordinate coordinates) {
 		this.coordinates = coordinates;
 	}
 }

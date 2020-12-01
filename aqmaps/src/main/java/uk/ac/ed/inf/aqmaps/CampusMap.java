@@ -23,7 +23,7 @@ public class CampusMap {
     public final List<Sensor> sensors = new ArrayList<Sensor>();
     public final List<Feature> noFlyZones = new ArrayList<Feature>();
     public final double[][] distanceMatrix = new double [34][34];
-    private static final HttpClient client = HttpClient.newHttpClient();
+    private static final HttpClient httpClient = HttpClient.newHttpClient();
     
     public CampusMap(String day, String month, String year) {
         this.day = day;
@@ -32,7 +32,7 @@ public class CampusMap {
     }
     
     /*
-     * Get list of all sensors to be visited, from the server.
+     * Get the list of all sensors to be visited, from the server, and add each sensor to sensors
      */
     public void getSensorListFromServer(int portNumber) throws IOException, InterruptedException {
         System.out.println("Retrieving list of sensors from server.");
@@ -40,7 +40,7 @@ public class CampusMap {
                 .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/" 
                         + "air-quality-data.json", portNumber,this.year,this.month,this.day)))
                 .build();
-        var response = client.send(request, BodyHandlers.ofString());
+        var response = httpClient.send(request, BodyHandlers.ofString());
         var listType = new TypeToken<ArrayList<Sensor>>(){}.getType();
         List<Sensor> sensorsForThisDay = new Gson().fromJson(response.body(), listType);
         for (var sensor: sensorsForThisDay) {
@@ -50,14 +50,14 @@ public class CampusMap {
     }
     
     /*
-     * Remove any sensors that are outside the confinement zone
+     * Remove any sensors that are outside the confinement zone from sensors list.
      */
     public void removeOutsideSensors() {
         for (var sensor: sensors) {
             if (!sensor.getCoordinate().isInConfinementZone()) {
                 sensors.remove(sensor);
-                System.out.println("Sensor " + sensor.getLocation() 
-                        + " is removed (outside confinement area)");
+                System.out.println("Sensor " + sensor.getLocation() + " is removed (outside confinement area)" 
+                + " at coordinate: " + sensor.getCoordinate().toString());
             }
         }
     }
@@ -68,9 +68,10 @@ public class CampusMap {
     
     public void getNoFlyZonesFromServer(int portNumber) throws IOException, InterruptedException {
         var request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
+                .uri(URI.create("http://localhost:" + portNumber
+                        + "/buildings/no-fly-zones.geojson"))
                 .build();
-        var response = client.send(request, BodyHandlers.ofString());
+        var response = httpClient.send(request, BodyHandlers.ofString());
         var featureCollection = FeatureCollection.fromJson(response.body());
         var featureList = featureCollection.features();
         // Adds each feature to the list of No Fly Zones
@@ -81,10 +82,10 @@ public class CampusMap {
     }
     
     /*
-     * Fill a 34 x 34 grid with the distances from all sensors to each other sensor, and all sensors
-     * to the start.
+     * Fill a 34 x 34 grid with the distances from all sensors to each other sensor, and 
+     * all sensors to the start.
      */
-    public void calculateDistanceMatrix(Coordinate droneStartPosition) throws IOException, InterruptedException {
+    public void calculateDistanceMatrix(Coordinate droneStartPosition) {
         for (int i = 0; i < this.distanceMatrix.length; i++) {
             for (int j = 0; j < this.distanceMatrix.length; j++) {
                 if (i == j) {

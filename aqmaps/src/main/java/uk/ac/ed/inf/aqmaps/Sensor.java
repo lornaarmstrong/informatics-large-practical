@@ -64,9 +64,7 @@ public class Sensor {
             if (statusCode == 200) {
                 // Get the coordinates of the location and set the sensor's position to this.
                 var word = new Gson().fromJson(response.body(), Word.class);
-                var longitude = word.getCoordinates().getLng();
-                var latitude = word.getCoordinates().getLat();
-                var coordinate = new Coordinate(latitude, longitude);
+                var coordinate = word.getCoordinates();
                 setCoordinate(coordinate);
             } else if (statusCode == 404){
                 System.out.println("The server cannot find the requested resource [error 404]");

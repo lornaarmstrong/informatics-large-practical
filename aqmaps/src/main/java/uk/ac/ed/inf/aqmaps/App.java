@@ -124,7 +124,7 @@ public class App
             Coordinate temporaryNodeJ;
             
             if (i == 0) {
-                temporaryNodeI = drone.startPosition;
+                temporaryNodeI = drone.getStartPosition();
                 temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
             }
             // sensor1 --> sensor2, sensor2 --> sensor3 etc.
@@ -159,7 +159,7 @@ public class App
         
         // Insert the sensor into the sensorsInOrder list between nodes I and J
         //if (nodeI.getLatitude() == drone.startPosition.getLatitude() && nodeI.getLongitude() == drone.startPosition.getLongitude()) {
-        if (nodeI.equals(drone.startPosition)) {
+        if (nodeI.equals(drone.getStartPosition())) {
             sensorsInOrder.add(0, nextSensorToInclude);
         } else {
             for (int j = 0; j < sensorsInOrder.size(); j++) {
@@ -176,7 +176,7 @@ public class App
      * Find the sensor that is closest to any sensor that is already in the sensorsInOrder list (has already been added)
      * or to the start
      */
-    public static Sensor selectNearestSensor(CampusMap map) throws IOException, InterruptedException {
+    public static Sensor selectNearestSensor(CampusMap map){
         Sensor nextSensorToInclude = null;
         var sensorDistancePair = new HashMap<Sensor, Double>();
         
@@ -200,7 +200,7 @@ public class App
                     } 
                 }
                 // Check distance to start and save if shorter than shortestDistance
-                distance = drone.startPosition.getEuclideanDistance(sensorNotAddedCoordinate);
+                distance = drone.getStartPosition().getEuclideanDistance(sensorNotAddedCoordinate);
                 if (distance < shortestDistance) {
                     shortestDistance = distance;
                  }
