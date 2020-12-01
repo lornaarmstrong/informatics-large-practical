@@ -2,9 +2,8 @@ package uk.ac.ed.inf.aqmaps;
 
 import com.mapbox.geojson.Point;
 
-/**
+/*
  * Coordinate class, as pairs of latitude and longitude values
- *
  */
 public class Coordinate {
 	
