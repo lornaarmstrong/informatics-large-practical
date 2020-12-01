@@ -5,9 +5,7 @@ import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The Drone class represents a Drone, with a position and number of 
@@ -21,11 +19,7 @@ public class Drone {
 	private int moves = 150;
 	public final double moveLength = 0.0003;
 	public boolean returningToStart;
-	public List<Point> route = new ArrayList<Point>();
-	
-	public HashMap<Coordinate,Integer> coordinateAngleTracker = new HashMap<Coordinate, Integer>();
-	public HashMap<Coordinate,Integer> temporaryTracker = new HashMap<Coordinate, Integer>();
-	
+	public List<Point> route = new ArrayList<Point>();	
 	public List<Coordinate> routeForCounting = new ArrayList<Coordinate>();
 	public List<Sensor> sensors = new ArrayList<Sensor>();
 	public List<Sensor> checkedSensors = new ArrayList<Sensor>();
@@ -209,11 +203,8 @@ public class Drone {
 	        this.currentPosition = proposedNextPosition;
 	        var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
 	        route.add(nextPoint);
-	        var integerDirection = Integer.valueOf(direction);
-	        coordinateAngleTracker.put(currentPosition, integerDirection);
 	        // Check if this new position is in range of the destination sensor
 	        if (sensors.size() > 0) {
-	            
 	            for (int i = 0; i < sensors.size(); i++) {
 	                var sensor = sensors.get(i);
 	                if (withinSensorRange(sensor)) {
@@ -224,14 +215,6 @@ public class Drone {
 	                    break;
 	                }
 	            }
-	            
-//	            var sensor = sensors.get(0);
-//	            if (withinSensorRange(sensor)) {
-//	                takeReading(sensor);
-//	                flightPath += "," + sensor.getLocation();
-//	                readingTaken = true;
-//	                sensors.remove(0);
-//	            }
 	        }   
 	        if (!readingTaken) {
 	            flightPath += "," + null;
