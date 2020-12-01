@@ -23,6 +23,7 @@ public class CampusMap {
     public final List<Sensor> sensors = new ArrayList<Sensor>();
     public final List<Feature> noFlyZones = new ArrayList<Feature>();
     public final double[][] distanceMatrix = new double [34][34];
+    private static final HttpClient client = HttpClient.newHttpClient();
     
     public CampusMap(String day, String month, String year) {
         this.day = day;
@@ -31,11 +32,10 @@ public class CampusMap {
     }
     
     /*
-     * Get list of all sensors to be visited, from the server, using passed-in portNumber.
+     * Get list of all sensors to be visited, from the server.
      */
     public void getSensorListFromServer(int portNumber) throws IOException, InterruptedException {
         System.out.println("Retrieving list of sensors from server.");
-        var client = HttpClient.newHttpClient();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(String.format("http://localhost:%d/maps/%s/%s/%s/" 
                         + "air-quality-data.json", portNumber,this.year,this.month,this.day)))
@@ -50,16 +50,15 @@ public class CampusMap {
     }
     
     /*
-     * Get the list of all polygons representing the No-Fly Zone buildings
+     * Get the list of all polygons representing the No-Fly Zone buildings, from the server.
      */
     public void getNoFlyZonesFromServer(int portNumber) throws IOException, InterruptedException {
-        var client = HttpClient.newHttpClient();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + portNumber + "/buildings/no-fly-zones.geojson"))
                 .build();
         var response = client.send(request, BodyHandlers.ofString());
         var featureCollection = FeatureCollection.fromJson(response.body());
-        List<Feature> featureList = featureCollection.features();
+        var featureList = featureCollection.features();
         // Adds each feature to the list of No Fly Zones
         for (var feature : featureList) {
             noFlyZones.add(feature);
@@ -68,7 +67,7 @@ public class CampusMap {
     }
     
     /*
-     * Fills a 34 x 34 grid with the distances from all sensors to each other sensor, and all sensors
+     * Fill a 34 x 34 grid with the distances from all sensors to each other sensor, and all sensors
      * to the start.
      */
     public void calculateDistanceMatrix(Coordinate droneStartPosition) throws IOException, InterruptedException {
