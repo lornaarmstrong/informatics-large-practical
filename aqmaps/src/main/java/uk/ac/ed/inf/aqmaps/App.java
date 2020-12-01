@@ -156,17 +156,13 @@ public class App
             count++;
         }
         
-        // Insert the sensor into the sensorsInOrder list between nodes I and J 
-        
-        // If nodeI is the start node, we need to insert node into the first position (index 0) of the sensorsInOrderList
-        if (nodeI.latitude == drone.startPosition.latitude && nodeI.longitude == drone.startPosition.longitude) {
+        // Insert the sensor into the sensorsInOrder list between nodes I and J
+        if (nodeI.getLatitude() == drone.startPosition.getLatitude() && nodeI.getLongitude() == drone.startPosition.getLongitude()) {
             sensorsInOrder.add(0, nextSensorToInclude);
         } else {
             for (int j = 0; j < sensorsInOrder.size(); j++) {
-                // when you find sensor node I, add the new sensor node into the next index of sensorsInOrder
-                // to make it between i and j
                 var node = sensorsInOrder.get(j).getCoordinate();
-                if (node.latitude == nodeI.latitude && node.longitude == nodeI.longitude) {
+                if (node.getLatitude() == nodeI.getLatitude() && node.getLongitude() == nodeI.getLongitude()) {
                     sensorsInOrder.add(j+1, nextSensorToInclude);
                     break;
                 }

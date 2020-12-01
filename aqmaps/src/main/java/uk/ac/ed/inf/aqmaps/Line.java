@@ -29,15 +29,15 @@ public class Line {
      */
     public boolean isIntersecting(Line boundary) {
         
-        var X1 = this.coordinateA.longitude;
-        var Y1 = this.coordinateA.latitude;
-        var X2 = this.coordinateB.longitude;
-        var Y2 = this.coordinateB.latitude;
+        var X1 = this.coordinateA.getLongitude();
+        var Y1 = this.coordinateA.getLatitude();
+        var X2 = this.coordinateB.getLongitude();
+        var Y2 = this.coordinateB.getLatitude();
       
-        var X3 = boundary.getCoordinateA().longitude;
-        var Y3 = boundary.getCoordinateA().latitude;
-        var X4 = boundary.getCoordinateB().longitude;
-        var Y4 = boundary.getCoordinateB().latitude;
+        var X3 = boundary.getCoordinateA().getLongitude();
+        var Y3 = boundary.getCoordinateA().getLatitude();
+        var X4 = boundary.getCoordinateB().getLongitude();
+        var Y4 = boundary.getCoordinateB().getLatitude();
         
         // Check if there is any overlap in the X values of the two lines
         if ( Math.max(X1, X2) < Math.min(X3, X4)) {

@@ -13,8 +13,8 @@ import com.mapbox.turf.TurfJoins;
  */
 public class Coordinate {
 	
-	public double latitude;
-	public double longitude;
+    private final double latitude;
+	private final double longitude;
 	
 	// Constructor for Coordinate
 	public Coordinate(double latitude, double longitude) {
@@ -27,16 +27,8 @@ public class Coordinate {
 		return this.latitude;
 	}
 	
-	public void setLatitude(Double latitude) {
-		this.latitude = latitude;
-	}
-	
 	public double getLongitude() {
 		return this.longitude;
-	}
-	
-	public void setLongitude(Double longitude) {
-		this.longitude = longitude;
 	}
 	
 	/*

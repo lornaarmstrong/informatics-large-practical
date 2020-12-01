@@ -115,7 +115,8 @@ public class Drone {
 //            }
         } else {
             returningToStart = true;
-            destination = new Coordinate (this.startPosition.latitude, this.startPosition.longitude);
+            //destination = new Coordinate (this.startPosition.latitude, this.startPosition.getLongitude());
+            destination = this.startPosition;
         }
         return destination;
     }
@@ -189,9 +190,9 @@ public class Drone {
 	        var newDirection = getNewAngleClockwise(direction + 20);
 	        moveDrone(newDirection);
 	    } else {
-	        var flightPath = currentPosition.longitude + "," + currentPosition.latitude + ","
-                        + direction + "," + proposedNextPosition.longitude + "," 
-                        + proposedNextPosition.latitude;
+	        var flightPath = currentPosition.getLongitude() + "," + currentPosition.getLatitude() + ","
+                        + direction + "," + proposedNextPosition.getLongitude() + "," 
+                        + proposedNextPosition.getLatitude();
 	        this.moves -= 1;
 	        this.currentPosition = proposedNextPosition;
 	        route.add(proposedNextPoint);
