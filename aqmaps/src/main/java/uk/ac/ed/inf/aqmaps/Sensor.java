@@ -47,10 +47,10 @@ public class Sensor {
 	}
 	
 	/*
-	 *  Find the latitude and longitude for the what3words location, using the server,
-	 *  and update the position attribute to be this Coordinate.
+	 * Translate the What3Words location to the corresponding Coordinate for its 
+	 * latitude and longitude
 	 */
-	public void translateWhat3Words() {
+	public void translateLocation() {
 	    var words = location.split("\\.");
 	    var client = HttpClient.newHttpClient();
 	    var request = HttpRequest.newBuilder()

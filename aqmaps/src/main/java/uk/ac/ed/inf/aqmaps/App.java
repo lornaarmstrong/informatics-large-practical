@@ -45,7 +45,7 @@ public class App
         
         // Get the latitude and longitude values of each sensor using the server and store
         for (var sensor: sensorList) {
-            sensor.translateWhat3Words();
+            sensor.translateLocation();
         }
         
         // Create the drone's starting point and drone instance
