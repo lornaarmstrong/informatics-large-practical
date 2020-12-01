@@ -6,8 +6,8 @@ package uk.ac.ed.inf.aqmaps;
  */
 public class Line {
 
-    private Coordinate coordinateA;
-    private Coordinate coordinateB;
+    private final Coordinate coordinateA;
+    private final Coordinate coordinateB;
     private static final double THRESHOLD = 0.0000000000001;
     
     public Line(Coordinate coordinateA, Coordinate coordinateB) {
@@ -19,17 +19,9 @@ public class Line {
     public Coordinate getCoordinateA() {
         return coordinateA;
     }
-  
-    public void setCoordinateA(Coordinate coordinateA) {
-        this.coordinateA = coordinateA;
-    }
     
     public Coordinate getCoordinateB() {
         return coordinateB;
-    }
-    
-    public void setCoordinateB(Coordinate coordinateB) {
-        this.coordinateB = coordinateB;
     }
 
     /*
@@ -76,14 +68,14 @@ public class Line {
             }
             
             // Check if (X,Y) lies on both lines and is the intersection point.
-            var X = (c2 - c1) / (m1 - m2);
-            var possibleY = (m1 * X) + c1;
-            var possibleY2 = (m2 * X) + c2;
+            var intersectX = (c2 - c1) / (m1 - m2);
+            var possibleY = (m1 * intersectX) + c1;
+            var possibleY2 = (m2 * intersectX) + c2;
             
             // Check if (X,Y) lies in the interval of the line segments
             if (Math.abs(possibleY - possibleY2) < THRESHOLD) {
-              if ( X < Math.max(Math.min(X1, X2), Math.min(X3, X4)) 
-                      || X > Math.min(Math.max(X1, X2), Math.max(X3, X4))) {
+              if ( intersectX < Math.max(Math.min(X1, X2), Math.min(X3, X4)) 
+                      || intersectX > Math.min(Math.max(X1, X2), Math.max(X3, X4))) {
                   return false;
               } else {
                   return true;
