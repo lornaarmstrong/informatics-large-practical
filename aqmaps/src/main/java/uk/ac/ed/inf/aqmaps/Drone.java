@@ -17,7 +17,8 @@ public class Drone {
 	public Coordinate startPosition;
 	private Coordinate currentPosition;
 	private int moves = 150;
-	public final double moveLength = 0.0003;
+	public static final double moveLength = 0.0003;
+	public static final double sensorRange = 0.0002;
 	public boolean returningToStart;
 	public List<Point> route = new ArrayList<Point>();	
 	public List<Coordinate> routeForCounting = new ArrayList<Coordinate>();
@@ -69,12 +70,11 @@ public class Drone {
      * Adds the starting position to the drone's route
      */
     public void startRoute() {
-        var startPoint = Point.fromLngLat(startPosition.longitude, startPosition.latitude);
-        route.add(startPoint);
+        route.add(startPosition.toPoint());
     }
 	
 	/*
-	 * Move the drone to create a route visiting all sensors (if possible)
+	 * Move the drone to create a route visiting all sensors (if possible).
 	 */
 	public void visitSensors() throws IOException, InterruptedException {
 	    var continueFlight = true;
@@ -83,13 +83,8 @@ public class Drone {
 	        var destination = getDestination();	  
 	        var direction = this.currentPosition.getAngle(destination);
 	        moveDrone(direction);
-	        
-	        // Check the 'stopping' conditions
-	        if (this.moves == 0) {
-	            System.out.println("The drone ran out of moves.");
-	            continueFlight = false;
-	        } else if (backToStart() && returningToStart) {
-	            System.out.println("The drone has returned to its starting position.");
+	        // Check the stopping conditions
+	        if (this.moves == 0 || (backToStart() && returningToStart)) {
 	            continueFlight = false;
 	        }
 	    }
@@ -103,7 +98,7 @@ public class Drone {
         Coordinate destination = null;
         if (this.sensors.size() != 0) {
             var destinationSensor = sensors.get(0);
-            destination = destinationSensor.getPosition();
+            destination = destinationSensor.getCoordinate();
             
             //int movesToSensor = this.countMoves(null, this.currentPosition, destination, 0); // number of moves to the next sensor
             //int movesToStart = this.countMoves(null, destination, this.startPosition, 0);
@@ -183,26 +178,23 @@ public class Drone {
 	 */
 	public void moveDrone(int direction) throws IOException, InterruptedException {
 	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
-	    var proposedNextPoint = Point.fromLngLat(proposedNextPosition.longitude, proposedNextPosition.latitude);
-	    var currentPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
+	    var proposedNextPoint = proposedNextPosition.toPoint();
+	    var currentPoint = this.currentPosition.toPoint();
 	    var readingTaken = false;
 	    
 	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition) || proposedNextPosition.isInNoFlyZone(map)) {   
 	        var newDirection = getNewAngleClockwise(direction);
-	        //System.out.println(newDirection + " = new direction");
 	        moveDrone(newDirection);
 	    } else if (repeatedMove(proposedNextPoint, currentPoint)){
 	        var newDirection = getNewAngleClockwise(direction + 20);
 	        moveDrone(newDirection);
 	    } else {
-	        //System.out.println("New position: " + proposedNextPosition + " " + direction);
 	        var flightPath = currentPosition.longitude + "," + currentPosition.latitude + ","
                         + direction + "," + proposedNextPosition.longitude + "," 
                         + proposedNextPosition.latitude;
 	        this.moves -= 1;
 	        this.currentPosition = proposedNextPosition;
-	        var nextPoint = Point.fromLngLat(this.currentPosition.longitude, this.currentPosition.latitude);
-	        route.add(nextPoint);
+	        route.add(proposedNextPoint);
 	        // Check if this new position is in range of the destination sensor
 	        if (sensors.size() > 0) {
 	            for (int i = 0; i < sensors.size(); i++) {
@@ -283,7 +275,6 @@ public class Drone {
 	 */
 	private void takeReading(Sensor sensor) {
 	    System.out.println("--- reading taken ---" + " " + sensor.getLocation());
-	    //System.out.println("Current position at reading: " + this.currentPosition);
 	    var sensorBatteryLevel = sensor.getBattery();
 	    var sensorLocation = sensor.getLocation();
 	    var sensorReading = sensor.getReading();
@@ -303,7 +294,7 @@ public class Drone {
 	 * Check if drone is within the range of the sensor (<0.0002 degrees)
 	 */
 	public boolean withinSensorRange(Sensor sensor) {
-	    return (this.currentPosition.getEuclideanDistance(sensor.getPosition()) < 0.0002);
+	    return (this.currentPosition.getEuclideanDistance(sensor.getCoordinate()) < 0.0002);
 	}
 	
 }

@@ -127,6 +127,11 @@ public class Coordinate {
         return updatedPosition;
     }
     
+    public Point toPoint() {
+        var point = Point.fromLngLat(this.longitude, this.latitude);
+        return point;
+    }
+    
     /*
      * A useful function that represents the coordinate as a string
      */

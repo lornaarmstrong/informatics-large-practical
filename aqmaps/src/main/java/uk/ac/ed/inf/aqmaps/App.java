@@ -25,7 +25,6 @@ public class App
     public static int portNumber;
     public static Drone drone;
     public static List<String> flightpathInformation = new ArrayList<String>();
-    public static List<Point> idealRoute = new ArrayList<Point>();
     
     public static void main( String[] args ) throws Exception {
         
@@ -53,6 +52,7 @@ public class App
         var startPosition = new Coordinate(startLatitude, startLongitude);
         drone = new Drone(startPosition, map);
         System.out.println("Drone starting position: " + startPosition.toString());
+        
         map.calculateDistanceMatrix(startPosition);
                
         // Find nearest node J, move to it, and build the partial tour (I, J)
@@ -68,15 +68,6 @@ public class App
         drone.setSensors(sensorsInOrder);
         drone.startRoute();
         drone.visitSensors();
-        
-//        // The 'expected' route (calculated using Nearest Insertion)
-//        idealRoute.add(startPoint);
-//        for (int i = 0; i < sensorsInOrder.size(); i++) {
-//            Sensor sensor = sensorsInOrder.get(i);
-//            Point sensorCoordinate = Point.fromLngLat(sensor.getPosition().longitude, sensor.getPosition().latitude);
-//            idealRoute.add(sensorCoordinate);
-//        }
-//        idealRoute.add(startPoint); 
         
         // Sensors and drone path for readings file
         var features = createMarkers(map);
@@ -116,7 +107,7 @@ public class App
         var minimum = 0.0;
         
         // Coordinates of the sensor to insert into the path
-        Coordinate nodeN = nextSensorToInclude.getPosition();
+        var nodeN = nextSensorToInclude.getCoordinate();
         
         // Coordinates of nodes I and J already in the path
         Coordinate nodeI = null;
@@ -133,12 +124,12 @@ public class App
             
             if (i == 0) {
                 temporaryNodeI = drone.startPosition;
-                temporaryNodeJ = sensorsInOrder.get(i).getPosition();
+                temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
             }
             // sensor1 --> sensor2, sensor2 --> sensor3 etc.
             else {
-                temporaryNodeI = sensorsInOrder.get(i-1).getPosition();
-                temporaryNodeJ = sensorsInOrder.get(i).getPosition();
+                temporaryNodeI = sensorsInOrder.get(i-1).getCoordinate();
+                temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
             }
 
             // Calculate d(I,N) + d(N,J) - d(I,J)
@@ -174,7 +165,7 @@ public class App
             for (int j = 0; j < sensorsInOrder.size(); j++) {
                 // when you find sensor node I, add the new sensor node into the next index of sensorsInOrder
                 // to make it between i and j
-                Coordinate node = sensorsInOrder.get(j).getPosition();
+                var node = sensorsInOrder.get(j).getCoordinate();
                 if (node.latitude == nodeI.latitude && node.longitude == nodeI.longitude) {
                     sensorsInOrder.add(j+1, nextSensorToInclude);
                     break;
@@ -197,7 +188,7 @@ public class App
             if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
                 var distance = 0.0;
-                var sensorNotAddedCoordinate = currentSensor.getPosition();
+                var sensorNotAddedCoordinate = currentSensor.getCoordinate();
                 // Calculate distance to each sensor in sensorsInOrder and save the shortest
                 for (int i = 0; i < sensorsInOrder.size(); i++) {
                     var sensorAdded = sensorsInOrder.get(i);
@@ -234,8 +225,8 @@ public class App
         for (var sensor: map.sensors) {
             
             // Create the marker feature
-            var markerCoordinate = sensor.getPosition();
-            var markerPoint = Point.fromLngLat(markerCoordinate.longitude, markerCoordinate.latitude);
+            var markerCoordinate = sensor.getCoordinate();
+            var markerPoint = markerCoordinate.toPoint();
             var markerGeometry = (Geometry) markerPoint;
             var markerFeature = Feature.fromGeometry(markerGeometry);
             

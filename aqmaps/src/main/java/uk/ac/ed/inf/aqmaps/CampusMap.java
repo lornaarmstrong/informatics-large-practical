@@ -82,15 +82,15 @@ public class CampusMap {
                     Coordinate destination;
                     Coordinate startFrom;
                     if (i == 0) {
-                        destination = sensors.get(j - 1).getPosition();
+                        destination = sensors.get(j - 1).getCoordinate();
                         startFrom = droneStartPosition;
                     } else {
                         if (j == 0) {
                             destination = droneStartPosition;
-                            startFrom = sensors.get(i - 1).getPosition();
+                            startFrom = sensors.get(i - 1).getCoordinate();
                         } else {
-                            startFrom = sensors.get(i - 1).getPosition();
-                            destination = sensors.get(j - 1).getPosition();
+                            startFrom = sensors.get(i - 1).getCoordinate();
+                            destination = sensors.get(j - 1).getCoordinate();
                         }
                     }
                     this.distanceMatrix[i][j] = startFrom.getEuclideanDistance(destination);
