@@ -63,6 +63,22 @@ public class CampusMap {
     }
     
     /*
+     * Calls all methods within CampusMap needed to set up the map.
+     */
+    public void setUp(int portNumber, Coordinate startPosition) throws IOException, InterruptedException {
+        getSensorListFromServer(portNumber);
+        getNoFlyZonesFromServer(portNumber);
+        
+        // Get the latitude and longitude values of each sensor using the server and store
+        for (var sensor: sensors) {
+            sensor.translateLocation();
+        }
+        
+        removeOutsideSensors();
+        calculateDistanceMatrix(startPosition);
+    }
+    
+    /*
      * Get the list of all polygons representing the No-Fly Zone buildings, from the server.
      */
     

@@ -21,6 +21,7 @@ public class Drone {
 	public List<Point> route = new ArrayList<Point>();	
 	public List<Sensor> sensors = new ArrayList<Sensor>();
 	public List<Sensor> checkedSensors = new ArrayList<Sensor>();
+	public List<String> flightpathInformation = new ArrayList<String>();
 	private final CampusMap map;
 	
 	public Drone(Coordinate startPosition, CampusMap map) {
@@ -126,7 +127,7 @@ public class Drone {
 	            flightPath += "," + null;
 	        }
 	        // Add the flightPathInfo string
-	        App.flightpathInformation.add(flightPath);
+	        this.flightpathInformation.add(flightPath);
 	    }
 	}
 	

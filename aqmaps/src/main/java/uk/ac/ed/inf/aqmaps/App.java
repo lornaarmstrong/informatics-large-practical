@@ -20,11 +20,9 @@ import java.util.Map;
  */
 public class App 
 {
-    public static List<Sensor> sensorList = new ArrayList<Sensor>();
     public static List<Sensor> sensorsInOrder = new ArrayList<Sensor>();
     public static int portNumber;
     public static Drone drone;
-    public static List<String> flightpathInformation = new ArrayList<String>();
     
     public static void main( String[] args ) throws Exception {
         
@@ -37,30 +35,22 @@ public class App
         var seed = Integer.parseInt(args[5]);
         portNumber = Integer.parseInt(args[6]);
         
-        // Set up the map and fetch all necessary data from the server
-        var map = new CampusMap(day, month, year);
-        map.getSensorListFromServer(portNumber);
-        sensorList = map.sensors.subList(0,33); // Ensures only 33 sensors are added to the list for the day
-        map.getNoFlyZonesFromServer(portNumber);
+        // Create starting Coordinate
+        var startPosition = new Coordinate(startLatitude, startLongitude);
         
-        // Get the latitude and longitude values of each sensor using the server and store
-        for (var sensor: sensorList) {
-            sensor.translateLocation();
-        }
-        map.removeOutsideSensors();
+        // Create Map object and call the map setUp method
+        var map = new CampusMap(day, month, year);
+        map.setUp(portNumber, startPosition);
         
         // Create the drone's starting point and drone instance
-        var startPosition = new Coordinate(startLatitude, startLongitude);
         drone = new Drone(startPosition, map);
         System.out.println("Drone starting position: " + startPosition.toString());
-        
-        map.calculateDistanceMatrix(startPosition);
                
         // Find nearest node J, move to it, and build the partial tour (I, J)
         var nearestSensor = findNearestSensor(startPosition, map);
         sensorsInOrder.add(nearestSensor);
        
-        while (sensorsInOrder.size() < sensorList.size()) {
+        while (sensorsInOrder.size() < map.sensors.size()) {
             var nextSensorToInclude = selectNearestSensor(map);
             insertIntoOrder(nextSensorToInclude);
         }
@@ -87,8 +77,8 @@ public class App
         var readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
         
         var fileWriter = new FileWriter(flightpathFile);
-        for (int i = 0; i < flightpathInformation.size(); i ++) {
-            fileWriter.write( (i+1) + "," + flightpathInformation.get(i) + "\n");
+        for (int i = 0; i < drone.flightpathInformation.size(); i ++) {
+            fileWriter.write( (i+1) + "," + drone.flightpathInformation.get(i) + "\n");
         }
         fileWriter.close();
         
@@ -182,7 +172,7 @@ public class App
         
         // For each row in distanceMatrix where row greater than 0
         // Find the smallest value in the row        
-        for (Sensor currentSensor: sensorList) {
+        for (Sensor currentSensor: map.sensors) {
             if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
                 var distance = 0.0;
@@ -190,7 +180,7 @@ public class App
                 // Calculate distance to each sensor in sensorsInOrder and save the shortest
                 for (int i = 0; i < sensorsInOrder.size(); i++) {
                     var sensorAdded = sensorsInOrder.get(i);
-                    distance = map.distanceMatrix[sensorList.indexOf(sensorAdded) + 1][ sensorList.indexOf(currentSensor) + 1];
+                    distance = map.distanceMatrix[map.sensors.indexOf(sensorAdded) + 1][map.sensors.indexOf(currentSensor) + 1];
                     if (i == 0) {
                         shortestDistance = distance;
                     } else {
@@ -212,6 +202,22 @@ public class App
         return nextSensorToInclude;
     }
     
+    /*
+     * Loops through all sensors and finds the sensor closest to passed-in point
+     */
+    public static Sensor findNearestSensor(Coordinate currentNode, CampusMap map) throws IOException, InterruptedException {
+        var shortestDistance = 0.0;
+        Sensor nextNode = null; // default to null
+        var counter = 0; 
+        for (int i = 0; i < map.distanceMatrix.length - 1; i++) {
+            var distance = map.distanceMatrix[0][i + 1];
+            if (distance < shortestDistance || counter == 0) {
+                shortestDistance = distance;
+                nextNode = map.sensors.get(i);
+            }
+        }
+        return nextNode;
+    }
 
     /*
      * Creates a marker for each sensor in the passed-in map, with the four properties: rgb-string, location,
@@ -293,24 +299,6 @@ public class App
             // This is the case for if the prediction value is not in range
             throw new Exception("The prediction value must be between 0 and 255 (inclusive)");
         }
-    }
-
-    
-    /*
-     * Loops through all sensors and finds the sensor closest to passed-in point
-     */
-    public static Sensor findNearestSensor(Coordinate currentNode, CampusMap map) throws IOException, InterruptedException {
-        var shortestDistance = 0.0;
-        Sensor nextNode = null; // default to null
-        var counter = 0; 
-        for (int i = 0; i < map.distanceMatrix.length - 1; i++) {
-            var distance = map.distanceMatrix[0][i + 1];
-            if (distance < shortestDistance || counter == 0) {
-                shortestDistance = distance;
-                nextNode = sensorList.get(i);
-            }
-        }
-        return nextNode;
     }
  
     /*
