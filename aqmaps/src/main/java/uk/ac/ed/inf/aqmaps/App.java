@@ -157,12 +157,13 @@ public class App
         }
         
         // Insert the sensor into the sensorsInOrder list between nodes I and J
-        if (nodeI.getLatitude() == drone.startPosition.getLatitude() && nodeI.getLongitude() == drone.startPosition.getLongitude()) {
+        //if (nodeI.getLatitude() == drone.startPosition.getLatitude() && nodeI.getLongitude() == drone.startPosition.getLongitude()) {
+        if (nodeI.equals(drone.startPosition)) {
             sensorsInOrder.add(0, nextSensorToInclude);
         } else {
             for (int j = 0; j < sensorsInOrder.size(); j++) {
                 var node = sensorsInOrder.get(j).getCoordinate();
-                if (node.getLatitude() == nodeI.getLatitude() && node.getLongitude() == nodeI.getLongitude()) {
+                if (node.equals(nodeI)) {
                     sensorsInOrder.add(j+1, nextSensorToInclude);
                     break;
                 }
