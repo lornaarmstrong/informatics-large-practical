@@ -3,7 +3,6 @@ package uk.ac.ed.inf.aqmaps;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,10 +35,6 @@ public class Drone {
 		return this.currentPosition;
 	}
 	
-	public void setCurrentPosition(Coordinate currentPosition) {
-		this.currentPosition = currentPosition;
-	}
-	
 	public Coordinate getStartPosition() {
 	    return this.startPosition;
 	}
@@ -52,10 +47,6 @@ public class Drone {
 	    this.sensors = sensors;
 	}
 	
-	public List<Sensor> getSensors() {
-	    return this.sensors;
-	}
-	
 	/*
      * Adds the starting position to the drone's route
      */
@@ -66,7 +57,7 @@ public class Drone {
 	/*
 	 * Move the drone to create a route visiting all sensors (if possible).
 	 */
-	public void visitSensors() throws IOException, InterruptedException {
+	public void visitSensors() {
 	    var continueFlight = true;
 
 	    while (continueFlight) {
@@ -74,7 +65,7 @@ public class Drone {
 	        var direction = this.currentPosition.getAngle(destination);
 	        moveDrone(direction, destination);
 	        // Check the stopping conditions
-	        if (this.moves == 0 || (backToStart() && returningToStart)) {
+	        if (this.moves == 0 || (withinRange(this.startPosition, moveLength) && returningToStart)) {
 	            continueFlight = false;
 	        }
 	    }
@@ -84,7 +75,7 @@ public class Drone {
      * Return the coordinate of the next point the drone is aiming for (either 
      * the next sensor to visit or back to the starting point)
      */
-    public Coordinate getDestination() throws IOException, InterruptedException {
+    public Coordinate getDestination() {
         Coordinate destination = null;
         if (this.sensors.size() != 0) {
             var destinationSensor = sensors.get(0);
@@ -99,7 +90,7 @@ public class Drone {
     /*
 	 * Move the drone, update its position and add the new position coordinates to route
 	 */
-	public void moveDrone(int direction, Coordinate destination) throws IOException, InterruptedException {
+	public void moveDrone(int direction, Coordinate destination) {
 	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
 	    var proposedNextPoint = proposedNextPosition.toPoint();
 	    var currentPoint = this.currentPosition.toPoint();
@@ -108,7 +99,7 @@ public class Drone {
 	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)) { 
 	        var newDirection = getNewAngleClockwise(direction);
 	        moveDrone(newDirection, destination);
-	    } else if (repeatedMove(proposedNextPoint, currentPoint, this.route)){
+	    } else if (isRepeatedMove(proposedNextPoint, currentPoint)){
 	        var newDirection = getNewAngleClockwise(direction + 20);
 	        moveDrone(newDirection, destination);
 	    } else {
@@ -122,7 +113,7 @@ public class Drone {
 	        if (sensors.size() > 0) {
 	            for (int i = 0; i < sensors.size(); i++) {
 	                var sensor = sensors.get(i);
-	                if (withinSensorRange(sensor)) {
+	                if (withinRange(sensor.getCoordinate(), sensor.getRange())) {
 	                    takeReading(sensor);
 	                    flightPath += "," + sensor.getLocation();
 	                    readingTaken = true;
@@ -142,11 +133,11 @@ public class Drone {
     /*
 	 * Returns true is the drone has already moved from point A to point B in the last 5 moves, false if not
 	 */
-	private boolean repeatedMove(Point proposedNext, Point current, List<Point> moves) {
+	private boolean isRepeatedMove(Point proposedNext, Point current) {
         for (int i = 1; i <= 5; i ++) {
-            if(moves.size() > 5) {
-                var pointA = moves.get(moves.size() - i);
-                var pointB = moves.get(moves.size() - (i + 1));
+            if(this.route.size() > 5) {
+                var pointA = this.route.get(this.route.size() - i);
+                var pointB = this.route.get(this.route.size() - (i + 1));
                 if (pointA.equals(proposedNext) && pointB.equals(current)) {
                     return true;
                 }
@@ -154,10 +145,12 @@ public class Drone {
         }
         return false;
 	}
-	
 
-    private int getNewAngleClockwise(int direction) {
-	    return ((direction + 10) % 360);
+	/*
+	 * Returns the next angle in anti-clockwise direction
+	 */
+    private int getNewAngleClockwise(int angle) {
+	    return ((angle + 10) % 360);
     }
 
     /*
@@ -181,10 +174,8 @@ public class Drone {
 	    var moveLine = new Line(newPosition, initialPosition);
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
-	        var moveIntersects = moveLine.isIntersecting(boundary);
-	        if (moveIntersects) {
-	            //System.out.println("Boundary: " + boundary.toString() + "    intersects: " + moveLine.toString() + "  " + moveIntersects);
-	            return true; // since the proposed move crosses a boundary
+	        if (moveLine.isIntersecting(boundary)) {
+	            return true;
 	        }
 	    } 
 	    return false;
@@ -202,18 +193,11 @@ public class Drone {
 	    checkedSensors.add(sensor);
 	}
 	
-	/*
-	 * Check if the drone is close to the starting position (<0.0003)
+	/* 
+	 * Check if the drone is within range of a given Coordinate (either Sensor or start point)
 	 */
-	private boolean backToStart() {
-	    return (this.currentPosition.getEuclideanDistance(this.startPosition) < 0.0003);
-	}
-	
-	/*
-	 * Check if drone is within the range of the sensor (<0.0002 degrees)
-	 */
-	public boolean withinSensorRange(Sensor sensor) {
-	    return (this.currentPosition.getEuclideanDistance(sensor.getCoordinate()) < 0.0002);
+	public boolean withinRange(Coordinate destination, double rangeValue) {
+	    return (this.currentPosition.getEuclideanDistance(destination) < rangeValue);
 	}
 	
 }

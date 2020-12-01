@@ -17,6 +17,7 @@ public class Sensor {
 	private Coordinate coordinate;
 	private final double battery;
 	private final String reading;
+	private static final double range = 0.0002;
 	
 	public Sensor(String location, double battery, String reading) {
 		this.location = location;
@@ -44,6 +45,10 @@ public class Sensor {
 	
 	public String getReading() {
 		return this.reading;
+	}
+	
+	public double getRange() {
+	    return this.range;
 	}
 	
 	/*

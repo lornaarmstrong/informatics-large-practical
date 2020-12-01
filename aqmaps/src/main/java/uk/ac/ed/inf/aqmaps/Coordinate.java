@@ -38,7 +38,7 @@ public class Coordinate {
 	}
 	
     /*
-     *  Calculate Euclidean distance between currentNode and sensor
+     *  Calculate Euclidean distance between current Coordinate and passed-in Coordinate
      */
     public double getEuclideanDistance(Coordinate coordinate) { 
         var y1 = this.latitude;
@@ -81,8 +81,8 @@ public class Coordinate {
     /*
      * Gets the next coordinate based on the direction and distance
      */
-    public Coordinate getNextPosition(int direction, double moveLength) {
-        var radians = Math.toRadians(direction);
+    public Coordinate getNextPosition(int angle, double moveLength) {
+        var radians = Math.toRadians(angle);
         // Use trigonometry to calculate the longitude and latitude values
         var xValue = moveLength * Math.cos(radians);
         var yValue = moveLength * Math.sin(radians);
