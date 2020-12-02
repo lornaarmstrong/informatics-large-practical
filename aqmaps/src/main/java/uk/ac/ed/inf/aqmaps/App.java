@@ -76,14 +76,9 @@ public class App
         var flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
         var readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
         
-        var fileWriter = new FileWriter(flightpathFile);
-        for (int i = 0; i < drone.flightpathInformation.size(); i ++) {
-            fileWriter.write( (i+1) + "," + drone.flightpathInformation.get(i) + "\n");
-        }
-        fileWriter.close();
-        
         // GeoJSON
         writeJsonFile(readingsFile, allFeatures.toJson());
+        writeFlightpathFile(flightpathFile);
         
         // Print out the number of moves remaining
         System.out.println("Total number of moves: " + (150 - drone.getMoves()));
@@ -262,7 +257,7 @@ public class App
     }
     
     /*
-     * Returns corresponding RGB value for the colour mapping based on sensor reading value
+     * Return corresponding RGB value for the colour mapping based on sensor reading value
      */
     public static String getRGBString(double value) throws Exception {
         if (0 <= value && value < 32) {
@@ -288,7 +283,7 @@ public class App
     }
     
     /*
-     * Returns the corresponding marker symbol for the sensor reading value
+     * Return the corresponding marker symbol for the sensor reading value
      */
     public static String getMarkerSymbol(double value) throws Exception {
         if (0 <= value && value < 128) {
@@ -304,15 +299,27 @@ public class App
     /*
      * Write json to a given filename
      */
-    public static void writeJsonFile(String filename, String json) throws IOException {
-        System.out.println("Writing to file " + filename);
+    private static void writeJsonFile(String filename, String json) throws IOException {
         var writer = new BufferedWriter(new FileWriter(filename));
         try {
             writer.write(json);
+            System.out.println("Written to file " + filename);
         } catch (IOException e) {
             e.printStackTrace();
         }
         writer.close();
+    }
+    
+    /*
+     * Write the flightpath text file to the given filename
+     */
+    private static void writeFlightpathFile(String filename) throws IOException {
+        var fileWriter = new FileWriter(filename);
+        for (int i = 0; i < drone.flightpathInformation.size(); i ++) {
+            fileWriter.write((i+1) + "," + drone.flightpathInformation.get(i) + "\n");
+        }
+        System.out.println("Written to file " + filename);
+        fileWriter.close();
     }
 }
 
