@@ -4,15 +4,11 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Geometry;
 import com.mapbox.geojson.LineString;
-import com.mapbox.geojson.Point;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /*
  * App class for the autonomous drone, collecting sensor readings for air quality.
@@ -23,6 +19,7 @@ public class App
     public static List<Sensor> sensorsInOrder = new ArrayList<Sensor>();
     public static int portNumber;
     public static Drone drone;
+    public static GeographicalArea map;
     
     public static void main( String[] args ) throws Exception {
         
@@ -38,191 +35,62 @@ public class App
         // Create starting Coordinate
         var startPosition = new Coordinate(startLatitude, startLongitude);
         
-        // Create Map object and call the map setUp method
-        var map = new CampusMap(day, month, year);
+        // Create instance of GeographicalArea and call the map setUp method
+        map = new GeographicalArea(day, month, year);
         map.setUp(portNumber, startPosition);
         
-        // Create the drone's starting point and drone instance
+        // Create instance of Drone
         drone = new Drone(startPosition, map);
-        System.out.println("Drone starting position: " + startPosition.toString());
-               
-        // Find nearest node J, move to it, and build the partial tour (I, J)
-        var nearestSensor = findNearestSensor(startPosition, map);
-        sensorsInOrder.add(nearestSensor);
-       
-        while (sensorsInOrder.size() < map.sensors.size()) {
-            var nextSensorToInclude = selectNearestSensor(map);
-            insertIntoOrder(nextSensorToInclude);
-        }
         
+        // Create instance of NearestInsertion and get the list of sensors to visit, in order 
+        var nearestInsertion = new NearestInsertion(startPosition, map);
+        var sensorOrder = nearestInsertion.generateSensorOrder();
+
         // Give the drone the list of sensors to visit in order and then set the drone off moving
-        drone.setSensors(sensorsInOrder);
+        drone.setSensors(sensorOrder);
         drone.startRoute();
         drone.visitSensors();
         
-        // Sensors and drone path for readings file
-        var features = createMarkers(map);
-        var dronePathLine = LineString.fromLngLats(drone.route);
-        var dronePathGeometry = (Geometry) dronePathLine;
-        var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
-        features.add(dronePathFeature);
+        // Print out the end state of the drone after flight
+        System.out.println("Total number of moves: " + (150 - drone.getMoves()));
+        System.out.println("End location of drone: "  + drone.getCurrentPosition());
         
-        for (var feature: map.noFlyZones) {
-            features.add(feature);
-        }
-        var allFeatures = FeatureCollection.fromFeatures(features);
+        // Create all Features to be written to the Geo-JSON file
+        var allFeatures = getFeaturesForGeoJson();
         
         // Output Files
         var flightpathFile = "flightpath" + "-" + day + "-" + month + "-" + year + ".txt";
         var readingsFile = "readings" + "-" + day + "-" + month + "-" + year +".geojson";
-        
-        // GeoJSON
         writeJsonFile(readingsFile, allFeatures.toJson());
         writeFlightpathFile(flightpathFile);
-        
-        // Print out the number of moves remaining
-        System.out.println("Total number of moves: " + (150 - drone.getMoves()));
-        System.out.println("End location of drone: "  + drone.getCurrentPosition());
-    }
-
-    /*
-     * Insert sensor N into sensorsInOrder such that d(I,N) + d(N,J) - d(I,J) is minimised and I and J are sensors
-     * already in the sensorsInOrder list
-     */
-    public static void insertIntoOrder(Sensor nextSensorToInclude) throws IOException, InterruptedException {
-        var minimum = 0.0;
-        
-        // Coordinates of the sensor to insert into the path
-        var nodeN = nextSensorToInclude.getCoordinate();
-        
-        // Coordinates of nodes I and J already in the path
-        Coordinate nodeI = null;
-        Coordinate nodeJ = null;
-        
-        //System.out.println("Number of Sensors In Order: " + sensorsInOrder.size());
-        for (int i = 0; i < sensorsInOrder.size(); i ++) {
-            int count = 0;
-
-            // Consider adjacent points I and J from the sensors in order
-            // We need to consider the start --> sensor1
-            Coordinate temporaryNodeI;
-            Coordinate temporaryNodeJ;
-            
-            if (i == 0) {
-                temporaryNodeI = drone.getStartPosition();
-                temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
-            }
-            // sensor1 --> sensor2, sensor2 --> sensor3 etc.
-            else {
-                temporaryNodeI = sensorsInOrder.get(i-1).getCoordinate();
-                temporaryNodeJ = sensorsInOrder.get(i).getCoordinate();
-            }
-
-            // Calculate d(I,N) + d(N,J) - d(I,J)
-            var distanceIJ = temporaryNodeI.getEuclideanDistance(temporaryNodeJ);
-            var distanceIN = temporaryNodeI.getEuclideanDistance(nodeN);
-            var distanceNJ = nodeN.getEuclideanDistance(temporaryNodeJ);
-            var formulaResult = distanceIN + distanceNJ - distanceIJ;
-            
-            // If this is the first distance we have checked, update the minimum
-            // because it's the only distance so must be the smallest checked yet distance
-            if (count == 0) {
-                minimum = formulaResult;
-                nodeI = temporaryNodeI;
-                nodeJ = temporaryNodeJ;
-            }
-            
-            // If the result of the formula for this edge is less than minimum,
-            // update the nodeI and nodeJ variables to store the new (i,j) edge
-            else if (formulaResult <= minimum) {
-                minimum = formulaResult;
-                nodeI = temporaryNodeI;
-                nodeJ = temporaryNodeJ;
-            }
-            count++;
-        }
-        
-        // Insert the sensor into the sensorsInOrder list between nodes I and J
-        //if (nodeI.getLatitude() == drone.startPosition.getLatitude() && nodeI.getLongitude() == drone.startPosition.getLongitude()) {
-        if (nodeI.equals(drone.getStartPosition())) {
-            sensorsInOrder.add(0, nextSensorToInclude);
-        } else {
-            for (int j = 0; j < sensorsInOrder.size(); j++) {
-                var node = sensorsInOrder.get(j).getCoordinate();
-                if (node.equals(nodeI)) {
-                    sensorsInOrder.add(j+1, nextSensorToInclude);
-                    break;
-                }
-            }
-        }
     }
     
     /*
-     * Find the sensor that is closest to any sensor that is already in the sensorsInOrder list (has already been added)
-     * or to the start
+     * Create the FeatureCollection containing all sensor marker Features and the LineString
+     * representing the drone's flight path.
      */
-    public static Sensor selectNearestSensor(CampusMap map){
-        Sensor nextSensorToInclude = null;
-        var sensorDistancePair = new HashMap<Sensor, Double>();
-        
-        // For each row in distanceMatrix where row greater than 0
-        // Find the smallest value in the row        
-        for (Sensor currentSensor: map.sensors) {
-            if (!sensorsInOrder.contains(currentSensor)) {
-                var shortestDistance = 0.0;
-                var distance = 0.0;
-                var sensorNotAddedCoordinate = currentSensor.getCoordinate();
-                // Calculate distance to each sensor in sensorsInOrder and save the shortest
-                for (int i = 0; i < sensorsInOrder.size(); i++) {
-                    var sensorAdded = sensorsInOrder.get(i);
-                    distance = map.distanceMatrix[map.sensors.indexOf(sensorAdded) + 1][map.sensors.indexOf(currentSensor) + 1];
-                    if (i == 0) {
-                        shortestDistance = distance;
-                    } else {
-                       if (distance < shortestDistance) {
-                           shortestDistance = distance;
-                       }
-                    } 
-                }
-                // Check distance to start and save if shorter than shortestDistance
-                distance = drone.getStartPosition().getEuclideanDistance(sensorNotAddedCoordinate);
-                if (distance < shortestDistance) {
-                    shortestDistance = distance;
-                 }
-                sensorDistancePair.put(currentSensor, shortestDistance);
-            }
+    private static FeatureCollection getFeaturesForGeoJson() throws Exception {
+        // Get the sensor marker Features
+        var features = createMarkers(map);
+        // Create Drone Path LineString and add to features
+        var dronePathLine = LineString.fromLngLats(drone.route);
+        var dronePathGeometry = (Geometry) dronePathLine;
+        var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
+        features.add(dronePathFeature);   
+        for (var feature: map.noFlyZones) {
+            features.add(feature);
         }
-        // Get the sensor for which the minimum distance is the minimum of all sensors
-        nextSensorToInclude = Collections.min(sensorDistancePair.entrySet(), Map.Entry.comparingByValue()).getKey();
-        return nextSensorToInclude;
-    }
-    
-    /*
-     * Loops through all sensors and finds the sensor closest to passed-in point
-     */
-    public static Sensor findNearestSensor(Coordinate currentNode, CampusMap map) throws IOException, InterruptedException {
-        var shortestDistance = 0.0;
-        Sensor nextNode = null; // default to null
-        var counter = 0; 
-        for (int i = 0; i < map.distanceMatrix.length - 1; i++) {
-            var distance = map.distanceMatrix[0][i + 1];
-            if (distance < shortestDistance || counter == 0) {
-                shortestDistance = distance;
-                nextNode = map.sensors.get(i);
-            }
-        }
-        return nextNode;
+        return(FeatureCollection.fromFeatures(features));
     }
 
     /*
-     * Creates a marker for each sensor in the passed-in map, with the four properties: rgb-string, location,
-     * marker-color and marker-symbol, and returns all markers in an ArrayList. 
+     * Create a marker for each sensor in the passed-in map, with the four properties: rgb-string,
+     * location, marker-color and marker-symbol, and returns all markers in an ArrayList. 
      */
-    public static ArrayList<Feature> createMarkers(CampusMap map) throws Exception {
+    private static ArrayList<Feature> createMarkers(GeographicalArea map) throws Exception {
         var markerFeatures = new ArrayList<Feature>();
         
         for (var sensor: map.sensors) {
-            
             // Create the marker feature
             var markerCoordinate = sensor.getCoordinate();
             var markerPoint = markerCoordinate.toPoint();
@@ -235,19 +103,20 @@ public class App
             if (!drone.checkedSensors.contains(sensor)) {
                 rgbValue = "#aaaaaa";
             } else {
-                // Check if the battery level is high enough for an accurate reading..
+                // Check if the battery level is high enough for an accurate reading
                 if (sensor.getBattery() >= 10) {
                     var reading = Double.parseDouble(sensor.getReading());
                     rgbValue = getRGBString(reading);
                     symbol = getMarkerSymbol(reading);
                 } else {
                     // Report the sensor as needing a new battery and discard the reading
+                    // Update the rgbValue and symbol to match this case.
                     rgbValue = "#000000";
                     symbol = "cross";
                 }
                 markerFeature.addStringProperty("marker-symbol", symbol);
             }
-            // Create the markers with the four properties
+            // Create the markers with the required properties
             markerFeature.addStringProperty("location", sensor.getLocation());
             markerFeature.addStringProperty("rgb-string", rgbValue);
             markerFeature.addStringProperty("marker-color", rgbValue);
@@ -259,7 +128,7 @@ public class App
     /*
      * Return corresponding RGB value for the colour mapping based on sensor reading value
      */
-    public static String getRGBString(double value) throws Exception {
+    private static String getRGBString(double value) throws Exception {
         if (0 <= value && value < 32) {
             return "#00ff00";
         } else if (32 <= value && value < 64) {
@@ -285,7 +154,7 @@ public class App
     /*
      * Return the corresponding marker symbol for the sensor reading value
      */
-    public static String getMarkerSymbol(double value) throws Exception {
+    private static String getMarkerSymbol(double value) throws Exception {
         if (0 <= value && value < 128) {
             return "lighthouse";
         } else if (128 <= value && value < 256) {
@@ -297,7 +166,7 @@ public class App
     }
  
     /*
-     * Write json to a given filename
+     * Write JSON to a given filename
      */
     private static void writeJsonFile(String filename, String json) throws IOException {
         var writer = new BufferedWriter(new FileWriter(filename));
@@ -315,8 +184,8 @@ public class App
      */
     private static void writeFlightpathFile(String filename) throws IOException {
         var fileWriter = new FileWriter(filename);
-        for (int i = 0; i < drone.flightpathInformation.size(); i ++) {
-            fileWriter.write((i+1) + "," + drone.flightpathInformation.get(i) + "\n");
+        for (int i = 0; i < drone.flightpathInformation.size(); i++) {
+            fileWriter.write((i + 1) + "," + drone.flightpathInformation.get(i) + "\n");
         }
         System.out.println("Written to file " + filename);
         fileWriter.close();
