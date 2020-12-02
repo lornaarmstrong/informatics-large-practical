@@ -64,13 +64,13 @@ public class NearestInsertion {
         
         // For each row in distanceMatrix where row greater than 0, find the smallest value 
         // in the row        
-        for (Sensor currentSensor: map.sensors) {
+        for (var currentSensor: map.sensors) {
             if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
                 var distance = 0.0;
                 var sensorNotAddedCoordinate = currentSensor.getCoordinate();
                 // Calculate distance to each sensor in sensorsInOrder and save the shortest
-                for (int i = 0; i < this.sensorsInOrder.size(); i++) {
+                for (var i = 0; i < this.sensorsInOrder.size(); i++) {
                     var sensorAdded = this.sensorsInOrder.get(i);
                     distance = map.distanceMatrix[map.sensors.indexOf(sensorAdded) + 1]
                             [map.sensors.indexOf(currentSensor) + 1];
