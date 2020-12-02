@@ -56,7 +56,7 @@ public class NearestInsertion {
     }
     
     /* 
-     * 
+     * Find the sensor closest to the start position.
      */
     public Sensor selectNearestSensor(GeographicalArea map, Coordinate startPosition){
         Sensor nextSensorToInclude = null;
