@@ -12,7 +12,6 @@ import java.util.List;
 
 /*
  * App class for the autonomous drone, collecting sensor readings for air quality.
- *
  */
 public class App 
 {
