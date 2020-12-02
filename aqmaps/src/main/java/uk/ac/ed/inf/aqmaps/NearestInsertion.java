@@ -45,7 +45,7 @@ public class NearestInsertion {
         var shortestDistance = 0.0;
         Sensor nextNode = null; // default value of null
         var counter = 0; 
-        for (int i = 0; i < map.distanceMatrix.length - 1; i++) {
+        for (var i = 0; i < map.distanceMatrix.length - 1; i++) {
             var distance = map.distanceMatrix[0][i + 1];
             if (distance < shortestDistance || counter == 0) {
                 shortestDistance = distance;
