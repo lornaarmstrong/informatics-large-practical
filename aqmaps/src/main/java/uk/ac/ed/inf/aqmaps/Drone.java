@@ -21,10 +21,10 @@ public class Drone {
 	public List<Point> route = new ArrayList<Point>();	
 	public List<Sensor> sensors = new ArrayList<Sensor>();
 	public List<Sensor> checkedSensors = new ArrayList<Sensor>();
-	public List<String> flightpathInformation = new ArrayList<String>();
-	private final CampusMap map;
+	private List<String> flightpathInformation = new ArrayList<String>();
+	private final GeographicalArea map;
 	
-	public Drone(Coordinate startPosition, CampusMap map) {
+	public Drone(Coordinate startPosition, GeographicalArea map) {
 	    this.currentPosition = startPosition;
 	    this.startPosition = startPosition;
 	    this.returningToStart = false;
@@ -36,10 +36,6 @@ public class Drone {
 		return this.currentPosition;
 	}
 	
-	public Coordinate getStartPosition() {
-	    return this.startPosition;
-	}
-	
 	public int getMoves() {
 		return this.moves;
 	}
@@ -48,25 +44,29 @@ public class Drone {
 	    this.sensors = sensors;
 	}
 	
+	public List<String> getFlightpathInformation() {
+	    return this.flightpathInformation;
+	}
+	
 	/*
-     * Adds the starting position to the drone's route
+     * Add the starting position to the drone's route
      */
     public void startRoute() {
         route.add(startPosition.toPoint());
     }
 	
 	/*
-	 * Move the drone to create a route visiting all sensors (if possible).
+	 * Move the drone to create a route of at most 150 moves, visiting all sensors (if possible).
 	 */
 	public void visitSensors() {
 	    var continueFlight = true;
-
 	    while (continueFlight) {
 	        var destination = getDestination();	  
 	        var direction = this.currentPosition.getAngle(destination);
 	        moveDrone(direction, destination);
 	        // Check the stopping conditions
-	        if (this.moves == 0 || (withinRange(this.startPosition, moveLength) && returningToStart)) {
+	        if (this.moves == 0 
+	                || (withinRange(this.startPosition, moveLength) && returningToStart)) {
 	            continueFlight = false;
 	        }
 	    }
@@ -74,9 +74,9 @@ public class Drone {
 	
 	/*
      * Return the coordinate of the next point the drone is aiming for (either 
-     * the next sensor to visit or back to the starting point)
+     * the next sensor to visit or the starting point)
      */
-    public Coordinate getDestination() {
+    private Coordinate getDestination() {
         Coordinate destination = null;
         if (this.sensors.size() != 0) {
             var destinationSensor = sensors.get(0);
@@ -91,48 +91,66 @@ public class Drone {
     /*
 	 * Move the drone, update its position and add the new position coordinates to route
 	 */
-	public void moveDrone(int direction, Coordinate destination) {
-	    var proposedNextPosition = this.currentPosition.getNextPosition(direction, moveLength);
+	private void moveDrone(int angle, Coordinate destination) {
+	    var proposedNextPosition = this.currentPosition.getNextPosition(angle, moveLength);
 	    var proposedNextPoint = proposedNextPosition.toPoint();
 	    var currentPoint = this.currentPosition.toPoint();
 	    var readingTaken = false;
 	    
-	    if (moveInterceptsNoFly(proposedNextPosition, this.currentPosition)) { 
-	        var newDirection = getNewAngleClockwise(direction);
+	    // Get confinement area
+	    var topLeftCoordinate = map.topLeftConfinement;
+	    var bottomLeftCoordinate = map.bottomLeftConfinement;
+	    var bottomRightCoordinate = map.bottomRightConfinement;
+	    
+	    // Check if the move involves flying through a No-Fly Zone
+	    if (moveIntersectsNoFlyZone(proposedNextPosition, this.currentPosition)) { 
+	        var newDirection = getNewAngleAnticlockwise(angle);
 	        moveDrone(newDirection, destination);
-	    } else if (isRepeatedMove(proposedNextPoint, currentPoint)){
-	        var newDirection = getNewAngleClockwise(direction + 20);
+	    } 
+	    // Check if the proposed next position is outside of the confinement zone
+	    else if (!proposedNextPosition.isInConfinementZone(topLeftCoordinate, 
+	            bottomLeftCoordinate, bottomRightCoordinate)) {
+	        var newDirection = getNewAngleAnticlockwise(angle - 10);
+            moveDrone(newDirection, destination);
+	    } 
+	    // Check if the suggested move has been repeated within the last 5 moves
+	    else if (isRepeatedMove(proposedNextPoint, currentPoint)){
+	        var newDirection = getNewAngleAnticlockwise(angle - 20);
 	        moveDrone(newDirection, destination);
-	    } else {
-	        var flightPath = currentPosition.getLongitude() + "," + currentPosition.getLatitude() + ","
-                        + direction + "," + proposedNextPosition.getLongitude() + "," 
-                        + proposedNextPosition.getLatitude();
+	    } 
+	    // The move is a legal move for the drone
+	    else {
+	        var flightPath = currentPosition.getLongitude() + "," + currentPosition.getLatitude()
+	                + "," + angle + "," + proposedNextPosition.getLongitude() + "," 
+                    + proposedNextPosition.getLatitude();
 	        this.moves -= 1;
 	        this.currentPosition = proposedNextPosition;
 	        route.add(proposedNextPoint);
-	        // Check if this new position is in range of the destination sensor
-	        if (sensors.size() > 0) {
-	            for (int i = 0; i < sensors.size(); i++) {
-	                var sensor = sensors.get(i);
+	        // Check if this new position is in range of a sensor and take reading if so
+	        if (this.sensors.size() > 0) {
+	            for (int i = 0; i < this.sensors.size(); i++) {
+	                var sensor = this.sensors.get(i);
 	                if (withinRange(sensor.getCoordinate(), sensor.getRange())) {
 	                    takeReading(sensor);
 	                    flightPath += "," + sensor.getLocation();
 	                    readingTaken = true;
-	                    sensors.remove(i);
+	                    this.sensors.remove(i);
 	                    break;
 	                }
 	            }
-	        }   
+	        }
+	        // If no reading is taken, append null to the flightPath line.
 	        if (!readingTaken) {
 	            flightPath += "," + null;
 	        }
-	        // Add the flightPathInfo string
+	        // Add the flightPath line to flightpathInformation.
 	        this.flightpathInformation.add(flightPath);
 	    }
 	}
 	
     /*
-	 * Returns true is the drone has already moved from point A to point B in the last 5 moves, false if not
+	 * Return true is the drone has already moved from point A to point B in the last 5 moves,
+	 * false if not.
 	 */
 	private boolean isRepeatedMove(Point proposedNext, Point current) {
         for (int i = 1; i <= 5; i ++) {
@@ -148,17 +166,19 @@ public class Drone {
 	}
 
 	/*
-	 * Returns the next angle in anti-clockwise direction
+	 * Return the next angle in anti-clockwise direction
 	 */
-    private int getNewAngleClockwise(int angle) {
-	    return ((angle + 10) % 360);
+    private int getNewAngleAnticlockwise(int angle) {
+	    return ((angle - 10) % 360);
     }
 
     /*
-	 * A method to check if the line formed by the move goes into any No-Fly Zone
+	 * Return true if the line formed by the move goes into any No-Fly Zone, false if not.
 	 */
-	public boolean moveInterceptsNoFly(Coordinate newPosition, Coordinate initialPosition) {
+	private boolean moveIntersectsNoFlyZone(Coordinate newPosition, Coordinate initialPosition) {
 	    var noFlyBoundaries = new ArrayList<Line>();
+	    // Get all features from the map, and break them down into all boundary lines.
+	    // Add the boundary lines to noFlyBoundaries.
 	    for (Feature feature: map.noFlyZones) {
 	        var polygon = (Polygon) feature.geometry();
 	        var coordinateLists = polygon.coordinates();
@@ -173,6 +193,7 @@ public class Drone {
 	        }
 	    }
 	    var moveLine = new Line(newPosition, initialPosition);
+	    // Loop through all boundaries of No-Fly Zones and check if the move intersects.
 	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
 	        if (moveLine.isIntersecting(boundary)) {
@@ -183,21 +204,20 @@ public class Drone {
 	}
     
 	/*
-	 * The drone takes the reading from the air quality sensor
+	 * Takes the reading from the air quality sensor
 	 */
 	private void takeReading(Sensor sensor) {
 	    var sensorBatteryLevel = sensor.getBattery();
 	    var sensorLocation = sensor.getLocation();
 	    var sensorReading = sensor.getReading();
 	    Sensor checkedSensor = new Sensor(sensorLocation, sensorBatteryLevel, sensorReading);
-	    // TODO fix this problem as it only wokrs when you add the sensor, not checkedSensor
-	    checkedSensors.add(sensor);
+	    checkedSensors.add(checkedSensor);
 	}
 	
 	/* 
 	 * Check if the drone is within range of a given Coordinate (either Sensor or start point)
 	 */
-	public boolean withinRange(Coordinate destination, double rangeValue) {
+	private boolean withinRange(Coordinate destination, double rangeValue) {
 	    return (this.currentPosition.getEuclideanDistance(destination) < rangeValue);
 	}
 	

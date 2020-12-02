@@ -76,9 +76,9 @@ public class App
         var dronePathGeometry = (Geometry) dronePathLine;
         var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
         features.add(dronePathFeature);   
-        for (var feature: map.noFlyZones) {
-            features.add(feature);
-        }
+//        for (var feature: map.noFlyZones) {
+//            features.add(feature);
+//        }
         return(FeatureCollection.fromFeatures(features));
     }
 
