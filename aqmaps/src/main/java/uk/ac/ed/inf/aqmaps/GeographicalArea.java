@@ -49,8 +49,6 @@ public class GeographicalArea {
         for (var sensor: sensors) {
             sensor.translateLocation();
         }
-        
-        removeOutsideSensors();
         calculateDistanceMatrix(startPosition);
     }
     
@@ -89,24 +87,6 @@ public class GeographicalArea {
             noFlyZones.add(feature);
         }
         System.out.println("No Fly Zones retrieved from server: " + noFlyZones.size());
-    }
-    
-    /*
-     * Remove any sensors that are outside the confinement zone from sensors list.
-     */
-    public void removeOutsideSensors() {
-        var indexesToRemove = new ArrayList<>();
-        for (var i = 0; i < this.sensors.size(); i++ ) {
-            var sensor = this.sensors.get(i);
-            if (!sensor.getCoordinate().isInConfinementZone(topLeftConfinement, 
-                    bottomLeftConfinement, bottomRightConfinement)) {
-                indexesToRemove.add(i);
-            }
-        } 
-        for (var i = 0; i < indexesToRemove.size(); i ++) {
-            var index = indexesToRemove.get(i);
-            this.sensors.remove(index);
-        }
     }
     
     /*
