@@ -84,7 +84,7 @@ public class App
 
     /*
      * Create a marker for each sensor in the passed-in map, with the four properties: rgb-string,
-     * location, marker-color and marker-symbol, and returns all markers in an ArrayList. 
+     * location, marker-color and marker-symbol, and return all markers in an ArrayList. 
      */
     private static ArrayList<Feature> createMarkers(GeographicalArea map) throws Exception {
         var markerFeatures = new ArrayList<Feature>();
@@ -183,8 +183,9 @@ public class App
      */
     private static void writeFlightpathFile(String filename) throws IOException {
         var fileWriter = new FileWriter(filename);
-        for (int i = 0; i < drone.flightpathInformation.size(); i++) {
-            fileWriter.write((i + 1) + "," + drone.flightpathInformation.get(i) + "\n");
+        var flightpath = drone.getFlightpathInformation();
+        for (int i = 0; i < flightpath.size(); i++) {
+            fileWriter.write((i + 1) + "," + flightpath.get(i) + "\n");
         }
         System.out.println("Written to file " + filename);
         fileWriter.close();

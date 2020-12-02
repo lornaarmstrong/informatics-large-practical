@@ -13,7 +13,6 @@ public class Coordinate {
     @SerializedName("lng")
 	private final double longitude;
 	
-	// Constructor for Coordinate
 	public Coordinate(double latitude, double longitude) {
 		this.latitude = latitude;
 		this.longitude = longitude;
@@ -31,9 +30,12 @@ public class Coordinate {
 	/*
 	 * Check if the coordinate is in the confinement area
 	 */
-	public boolean isInConfinementZone() {
-		var permittedLatitude = 55.942617 < this.latitude && this.latitude < 55.946233;
-		var permittedLongitude = -3.192473 < this.longitude && this.longitude < -3.184319;
+	public boolean isInConfinementZone(Coordinate topLeft, Coordinate bottomLeft, 
+	        Coordinate bottomRight) {
+		var permittedLatitude = bottomLeft.getLatitude() < this.latitude
+		        && this.latitude < topLeft.getLatitude();
+		var permittedLongitude = bottomLeft.getLongitude() < this.longitude
+		        && this.longitude < bottomRight.getLatitude();
 		return (permittedLatitude && permittedLongitude);
 	}
 	
@@ -50,7 +52,7 @@ public class Coordinate {
     }
     
     /*
-     * Calculate the angle to the passed-in coordinate.
+     * Calculate the angle to the passed-in Coordinate.
      */
     public int getAngle(Coordinate destination) {
         var yDistance = destination.getLatitude() - this.latitude;
@@ -79,7 +81,8 @@ public class Coordinate {
     }
     
     /*
-     * Gets the next coordinate based on the direction and distance
+     * Get the next Coordinate based on the direction and distance
+     * from the current Coordinate
      */
     public Coordinate getNextPosition(int angle, double moveLength) {
         var radians = Math.toRadians(angle);
