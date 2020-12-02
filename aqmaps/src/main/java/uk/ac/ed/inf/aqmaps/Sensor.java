@@ -8,7 +8,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.net.URI;
 
-/**
+/*
  * Sensor class to represent a sensor for air pollution levels
  */
 public class Sensor {
@@ -17,7 +17,7 @@ public class Sensor {
 	private Coordinate coordinate;
 	private final double battery;
 	private final String reading;
-	private static final double range = 0.0002;
+	private static final double RANGE = 0.0002;
 	
 	public Sensor(String location, double battery, String reading) {
 		this.location = location;
@@ -48,7 +48,7 @@ public class Sensor {
 	}
 	
 	public double getRange() {
-	    return this.range;
+	    return RANGE;
 	}
 	
 	/*
