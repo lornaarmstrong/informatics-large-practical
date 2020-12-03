@@ -72,13 +72,10 @@ public class App
         // Get the sensor marker Features
         var features = createMarkers(map);
         // Create Drone Path LineString and add to features
-        var dronePathLine = LineString.fromLngLats(drone.route);
+        var dronePathLine = LineString.fromLngLats(drone.getRoute());
         var dronePathGeometry = (Geometry) dronePathLine;
         var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
         features.add(dronePathFeature);   
-//        for (var feature: map.noFlyZones) {
-//            features.add(feature);
-//        }
         return(FeatureCollection.fromFeatures(features));
     }
 
@@ -89,7 +86,7 @@ public class App
     private static ArrayList<Feature> createMarkers(GeographicalArea map) throws Exception {
         var markerFeatures = new ArrayList<Feature>();
         
-        for (var sensor: map.sensors) {
+        for (var sensor: map.getSensors()) {
             // Create the marker feature
             var markerCoordinate = sensor.getCoordinate();
             var markerPoint = markerCoordinate.toPoint();
@@ -99,7 +96,7 @@ public class App
             var rgbValue = "";
             var symbol = "";
             
-            if (!drone.checkedSensors.contains(sensor)) {
+            if (!drone.getCheckedSensors().contains(sensor)) {
                 rgbValue = "#aaaaaa";
             } else {
                 // Check if the battery level is high enough for an accurate reading
@@ -183,7 +180,7 @@ public class App
      */
     private static void writeFlightpathFile(String filename) throws IOException {
         var fileWriter = new FileWriter(filename);
-        var flightpath = drone.getFlightpathInformation();
+        var flightpath = drone.getFlightpathData();
         for (int i = 0; i < flightpath.size(); i++) {
             fileWriter.write((i + 1) + "," + flightpath.get(i) + "\n");
         }

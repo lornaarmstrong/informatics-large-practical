@@ -31,7 +31,7 @@ public class NearestInsertion {
         this.sensorsInOrder.add(nearestSensorToStart);
         
         // Loop through all sensors yet to be added to the order until all have been included.
-        while (sensorsInOrder.size() < map.sensors.size()) {
+        while (sensorsInOrder.size() < map.getSensors().size()) {
             var nextSensorToInclude = selectNearestSensor(map, startNode);
             insertIntoOrder(nextSensorToInclude, startNode);
         }
@@ -49,7 +49,7 @@ public class NearestInsertion {
             var distance = map.distanceMatrix[0][i + 1];
             if (distance < shortestDistance || counter == 0) {
                 shortestDistance = distance;
-                nextNode = map.sensors.get(i);
+                nextNode = map.getSensors().get(i);
             }
         }
         return nextNode;
@@ -64,7 +64,8 @@ public class NearestInsertion {
         
         // For each row in distanceMatrix where row greater than 0, find the smallest value 
         // in the row        
-        for (var currentSensor: map.sensors) {
+        var sensors = map.getSensors();
+        for (var currentSensor: map.getSensors()) {
             if (!sensorsInOrder.contains(currentSensor)) {
                 var shortestDistance = 0.0;
                 var distance = 0.0;
@@ -72,8 +73,8 @@ public class NearestInsertion {
                 // Calculate distance to each sensor in sensorsInOrder and save the shortest
                 for (var i = 0; i < this.sensorsInOrder.size(); i++) {
                     var sensorAdded = this.sensorsInOrder.get(i);
-                    distance = map.distanceMatrix[map.sensors.indexOf(sensorAdded) + 1]
-                            [map.sensors.indexOf(currentSensor) + 1];
+                    distance = map.distanceMatrix[sensors.indexOf(sensorAdded) + 1]
+                            [sensors.indexOf(currentSensor) + 1];
                     if (i == 0) {
                         shortestDistance = distance;
                     } else {

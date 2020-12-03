@@ -15,14 +15,14 @@ public class Drone {
 	
 	private final Coordinate startPosition;
 	private Coordinate currentPosition;
-	private int moves = 150;
-	public static final double moveLength = 0.0003;
-	public boolean returningToStart;
-	public List<Point> route = new ArrayList<Point>();	
-	public List<Sensor> sensors = new ArrayList<Sensor>();
-	public List<Sensor> checkedSensors = new ArrayList<Sensor>();
-	private List<String> flightpathInformation = new ArrayList<String>();
 	private final GeographicalArea map;
+	private int moves = 150;
+	private static final double moveLength = 0.0003;
+	private boolean returningToStart;
+	private List<Point> route = new ArrayList<Point>();	
+	private List<Sensor> sensors = new ArrayList<Sensor>();
+	private List<Sensor> checkedSensors = new ArrayList<Sensor>();
+	private List<String> flightpathData = new ArrayList<String>();
 	
 	public Drone(Coordinate startPosition, GeographicalArea map) {
 	    this.currentPosition = startPosition;
@@ -40,12 +40,28 @@ public class Drone {
 		return this.moves;
 	}
 	
-	public void setSensors(List<Sensor> sensors) {
-	    this.sensors = sensors;
+	public List<Sensor> getSensors() {
+	    var newSensors = new ArrayList<Sensor>(this.sensors);
+	    return newSensors;
 	}
 	
-	public List<String> getFlightpathInformation() {
-	    return this.flightpathInformation;
+	public void setSensors(List<Sensor> sensors) {
+	    this.sensors = new ArrayList<Sensor>(sensors);
+	}
+	
+	public List<Point> getRoute() {
+	    var route = new ArrayList<Point>(this.route);
+	    return route;
+	}
+	
+	public List<Sensor> getCheckedSensors() {
+	    var checkedSensors = new ArrayList<Sensor>(this.sensors);
+	    return checkedSensors;
+	}
+	
+	public List<String> getFlightpathData() {
+	    var flightpathData = new ArrayList<String>(this.flightpathData);
+	    return flightpathData;
 	}
 	
 	/*
@@ -94,7 +110,6 @@ public class Drone {
 	private void moveDrone(int angle, Coordinate destination) {
 	    var proposedNextPosition = this.currentPosition.getNextPosition(angle, moveLength);
 	    var proposedNextPoint = proposedNextPosition.toPoint();
-	    var currentPoint = this.currentPosition.toPoint();
 	    var readingTaken = false;
 	    
 	    // Get confinement area
@@ -114,7 +129,7 @@ public class Drone {
             moveDrone(newDirection, destination);
 	    } 
 	    // Check if the suggested move has been repeated within the last 5 moves
-	    else if (isRepeatedMove(proposedNextPoint, currentPoint)){
+	    else if (isRepeatedMove(proposedNextPoint, this.currentPosition.toPoint())){
 	        var newDirection = getNewAngleAnticlockwise(angle - 20);
 	        moveDrone(newDirection, destination);
 	    } 
@@ -127,24 +142,22 @@ public class Drone {
 	        this.currentPosition = proposedNextPosition;
 	        route.add(proposedNextPoint);
 	        // Check if this new position is in range of a sensor and take reading if so
-	        if (this.sensors.size() > 0) {
-	            for (int i = 0; i < this.sensors.size(); i++) {
-	                var sensor = this.sensors.get(i);
-	                if (withinRange(sensor.getCoordinate(), sensor.getRange())) {
-	                    takeReading(sensor);
-	                    flightPath += "," + sensor.getLocation();
-	                    readingTaken = true;
-	                    this.sensors.remove(i);
-	                    break;
-	                }
-	            }
-	        }
+            for (int i = 0; i < this.sensors.size(); i++) {
+                var sensor = this.sensors.get(i);
+                if (withinRange(sensor.getCoordinate(), sensor.getRange())) {
+                    takeReading(sensor);
+                    flightPath += "," + sensor.getLocation();
+                    readingTaken = true;
+                    this.sensors.remove(i);
+                    break;
+                }
+            }
 	        // If no reading is taken, append null to the flightPath line.
 	        if (!readingTaken) {
 	            flightPath += "," + null;
 	        }
-	        // Add the flightPath line to flightpathInformation.
-	        this.flightpathInformation.add(flightPath);
+	        // Add the flightPath line to flightpathData.
+	        this.flightpathData.add(flightPath);
 	    }
 	}
 	
@@ -179,7 +192,7 @@ public class Drone {
 	    var noFlyBoundaries = new ArrayList<Line>();
 	    // Get all features from the map, and break them down into all boundary lines.
 	    // Add the boundary lines to noFlyBoundaries.
-	    for (Feature feature: map.noFlyZones) {
+	    for (Feature feature: map.getNoFlyZones()) {
 	        var polygon = (Polygon) feature.geometry();
 	        var coordinateLists = polygon.coordinates();
 	        var coordinateList = coordinateLists.get(0);
