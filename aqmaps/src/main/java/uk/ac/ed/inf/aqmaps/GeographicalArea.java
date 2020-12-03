@@ -26,15 +26,28 @@ public class GeographicalArea {
     private static final HttpClient httpClient = HttpClient.newHttpClient();
     
     // Confinement Zone Coordinates
-    public static final Coordinate topLeftConfinement = new Coordinate(55.946233, -3.192473);
-    public static final Coordinate topRightConfinement = new Coordinate(55.946233, -3.184319);
-    public static final Coordinate bottomLeftConfinement = new Coordinate(55.942617, -3.192473);
-    public static final Coordinate bottomRightConfinement = new Coordinate(55.942617, -3.184319);
+    private final Coordinate topLeftConfinement = new Coordinate(55.946233, -3.192473);
+    private final Coordinate topRightConfinement = new Coordinate(55.946233, -3.184319);
+    private final Coordinate bottomLeftConfinement = new Coordinate(55.942617, -3.192473);
+    private final Coordinate bottomRightConfinement = new Coordinate(55.942617, -3.184319);
     
     public GeographicalArea(String day, String month, String year) {
         this.day = day;
         this.month = month;
         this.year = year;
+    }
+    
+    // Getters
+    public Coordinate getTopLeftConfinement() {
+        return this.topLeftConfinement;
+    }
+    
+    public Coordinate getBottomLeftConfinement() {
+        return this.bottomLeftConfinement;
+    }
+    
+    public Coordinate getBottomRightConfinement() {
+        return this.bottomRightConfinement;
     }
     
     /*

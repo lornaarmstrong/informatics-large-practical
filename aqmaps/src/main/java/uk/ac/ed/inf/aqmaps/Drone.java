@@ -98,9 +98,9 @@ public class Drone {
 	    var readingTaken = false;
 	    
 	    // Get confinement area
-	    var topLeftCoordinate = map.topLeftConfinement;
-	    var bottomLeftCoordinate = map.bottomLeftConfinement;
-	    var bottomRightCoordinate = map.bottomRightConfinement;
+	    var topLeftCoordinate = map.getTopLeftConfinement();
+	    var bottomLeftCoordinate = map.getBottomLeftConfinement();
+	    var bottomRightCoordinate = map.getBottomRightConfinement();
 	    
 	    // Check if the move involves flying through a No-Fly Zone
 	    if (moveIntersectsNoFlyZone(proposedNextPosition, this.currentPosition)) { 
