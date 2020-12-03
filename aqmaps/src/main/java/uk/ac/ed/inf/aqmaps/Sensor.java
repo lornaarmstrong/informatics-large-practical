@@ -82,4 +82,13 @@ public class Sensor {
             e.printStackTrace();
         }
 	}
+	
+	/* 
+	 * Equality comparison method for comparing sensors
+	 */
+	public boolean equals(Sensor sensor) {
+	    return (this.location == sensor.getLocation() 
+	            && this.reading == sensor.getReading()
+	            && this.battery == sensor.getBattery());
+	}
 }

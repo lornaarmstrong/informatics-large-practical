@@ -8,17 +8,15 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 /*
  * App class for the autonomous drone, collecting sensor readings for air quality.
  */
 public class App 
 {
-    public static List<Sensor> sensorsInOrder = new ArrayList<Sensor>();
     public static int portNumber;
-    public static Drone drone;
-    public static GeographicalArea map;
+    private static Drone drone;
+    private static GeographicalArea map;
     
     public static void main( String[] args ) throws Exception {
         
@@ -72,7 +70,7 @@ public class App
         // Get the sensor marker Features
         var features = createMarkers(map);
         // Create Drone Path LineString and add to features
-        var dronePathLine = LineString.fromLngLats(drone.getRoute());
+        var dronePathLine = LineString.fromLngLats(drone.route);
         var dronePathGeometry = (Geometry) dronePathLine;
         var dronePathFeature = Feature.fromGeometry(dronePathGeometry);
         features.add(dronePathFeature);   
@@ -86,7 +84,7 @@ public class App
     private static ArrayList<Feature> createMarkers(GeographicalArea map) throws Exception {
         var markerFeatures = new ArrayList<Feature>();
         
-        for (var sensor: map.getSensors()) {
+        for (var sensor: map.sensors) {
             // Create the marker feature
             var markerCoordinate = sensor.getCoordinate();
             var markerPoint = markerCoordinate.toPoint();
@@ -96,7 +94,7 @@ public class App
             var rgbValue = "";
             var symbol = "";
             
-            if (!drone.getCheckedSensors().contains(sensor)) {
+            if (!drone.hasCheckedSensor(sensor)) {
                 rgbValue = "#aaaaaa";
             } else {
                 // Check if the battery level is high enough for an accurate reading
@@ -180,7 +178,7 @@ public class App
      */
     private static void writeFlightpathFile(String filename) throws IOException {
         var fileWriter = new FileWriter(filename);
-        var flightpath = drone.getFlightpathData();
+        var flightpath = drone.flightpathData;
         for (int i = 0; i < flightpath.size(); i++) {
             fileWriter.write((i + 1) + "," + flightpath.get(i) + "\n");
         }

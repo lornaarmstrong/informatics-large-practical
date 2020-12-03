@@ -6,7 +6,7 @@ import com.mapbox.geojson.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/*
  * The Drone class represents a Drone, with a position and number of 
  * moves as attributes.
  *
@@ -19,10 +19,10 @@ public class Drone {
 	private int moves = 150;
 	private static final double moveLength = 0.0003;
 	private boolean returningToStart;
-	private List<Point> route = new ArrayList<Point>();	
-	private List<Sensor> sensors = new ArrayList<Sensor>();
-	private List<Sensor> checkedSensors = new ArrayList<Sensor>();
-	private List<String> flightpathData = new ArrayList<String>();
+	public List<Point> route = new ArrayList<Point>();	
+	public List<Sensor> sensors = new ArrayList<Sensor>();
+	public List<Sensor> checkedSensors = new ArrayList<Sensor>();
+	public List<String> flightpathData = new ArrayList<String>();
 	
 	public Drone(Coordinate startPosition, GeographicalArea map) {
 	    this.currentPosition = startPosition;
@@ -40,28 +40,13 @@ public class Drone {
 		return this.moves;
 	}
 	
-	public List<Sensor> getSensors() {
-	    var newSensors = new ArrayList<Sensor>(this.sensors);
-	    return newSensors;
-	}
-	
 	public void setSensors(List<Sensor> sensors) {
-	    this.sensors = new ArrayList<Sensor>(sensors);
+	    this.sensors = sensors;
 	}
 	
-	public List<Point> getRoute() {
-	    var route = new ArrayList<Point>(this.route);
-	    return route;
-	}
-	
-	public List<Sensor> getCheckedSensors() {
-	    var checkedSensors = new ArrayList<Sensor>(this.sensors);
-	    return checkedSensors;
-	}
 	
 	public List<String> getFlightpathData() {
-	    var flightpathData = new ArrayList<String>(this.flightpathData);
-	    return flightpathData;
+	    return this.flightpathData;
 	}
 	
 	/*
@@ -105,7 +90,7 @@ public class Drone {
     }
 
     /*
-	 * Move the drone, update its position and add the new position coordinates to route
+	 * Move the drone, update its position and add the new position coordinate to route
 	 */
 	private void moveDrone(int angle, Coordinate destination) {
 	    var proposedNextPosition = this.currentPosition.getNextPosition(angle, moveLength);
@@ -192,7 +177,7 @@ public class Drone {
 	    var noFlyBoundaries = new ArrayList<Line>();
 	    // Get all features from the map, and break them down into all boundary lines.
 	    // Add the boundary lines to noFlyBoundaries.
-	    for (Feature feature: map.getNoFlyZones()) {
+	    for (var feature: map.noFlyZones) {
 	        var polygon = (Polygon) feature.geometry();
 	        var coordinateLists = polygon.coordinates();
 	        var coordinateList = coordinateLists.get(0);
@@ -207,7 +192,7 @@ public class Drone {
 	    }
 	    var moveLine = new Line(newPosition, initialPosition);
 	    // Loop through all boundaries of No-Fly Zones and check if the move intersects.
-	    for (int i = 0; i < noFlyBoundaries.size(); i++) {
+	    for (var i = 0; i < noFlyBoundaries.size(); i++) {
 	        var boundary = noFlyBoundaries.get(i);
 	        if (moveLine.isIntersecting(boundary)) {
 	            return true;
@@ -217,14 +202,26 @@ public class Drone {
 	}
     
 	/*
-	 * Takes the reading from the air quality sensor
+	 * Take the reading from the air quality sensor
 	 */
 	private void takeReading(Sensor sensor) {
 	    var sensorBatteryLevel = sensor.getBattery();
 	    var sensorLocation = sensor.getLocation();
 	    var sensorReading = sensor.getReading();
-	    Sensor checkedSensor = new Sensor(sensorLocation, sensorBatteryLevel, sensorReading);
+	    var checkedSensor = new Sensor(sensorLocation, sensorBatteryLevel, sensorReading);
 	    checkedSensors.add(checkedSensor);
+	}
+	
+	/*
+	 * Return true if the sensor has been checked, false otherwise
+	 */
+	public boolean hasCheckedSensor(Sensor sensor) {
+	    for (var i = 0; i < this.checkedSensors.size(); i++) {
+	        if (checkedSensors.get(i).equals(sensor)) {
+	            return true;
+	        }
+	    }
+	    return false;
 	}
 	
 	/* 

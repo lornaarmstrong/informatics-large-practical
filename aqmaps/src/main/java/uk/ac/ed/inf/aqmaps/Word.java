@@ -8,7 +8,7 @@ public class Word {
     
 	private Coordinate coordinates;
 	
-	/* Getters and Setters */
+	// Getters and Setters
 	public Coordinate getCoordinates() {
 		return this.coordinates;
 	}

@@ -20,8 +20,8 @@ public class GeographicalArea {
     private final String day;
     private final String month;
     private final String year;
-    private final List<Sensor> sensors = new ArrayList<Sensor>();
-    private final List<Feature> noFlyZones = new ArrayList<Feature>();
+    public final List<Sensor> sensors = new ArrayList<Sensor>();
+    public final List<Feature> noFlyZones = new ArrayList<Feature>();
     public final double[][] distanceMatrix = new double [34][34];
     private static final HttpClient httpClient = HttpClient.newHttpClient();
     
@@ -38,16 +38,6 @@ public class GeographicalArea {
     }
     
     // Getters
-    public List<Sensor> getSensors() {
-        var sensors = new ArrayList<Sensor>(this.sensors);
-        return sensors;
-    }
-    
-    public List<Feature> getNoFlyZones() {
-        var noFlyZones = new ArrayList<Feature>(this.noFlyZones);
-        return noFlyZones;
-    }
-    
     public Coordinate getTopLeftConfinement() {
         return this.topLeftConfinement;
     }
