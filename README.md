@@ -1,4 +1,6 @@
-# ilp-coursework2
+# Informatics Large Practical
+Here is my repository for my project for Informatics Large Practical.
+
 Solution for Coursework 2 - Autonomous Drone Sensor Collecting
 
 This is my implementation for a task during my Informatics Large Practical coursework. 
