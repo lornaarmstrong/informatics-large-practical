@@ -51,3 +51,5 @@ Here are two figures that show two different routes generated using my implement
 | Task 1                     | 24            | 25       |
 | Task 2                     | 65            | 75       |
 | Total                      | 89            | 100      |
+
+This included full marks for my report (within Task 2, 30 marks), acting as documentation for the written program. This includes outlining the methods, attributes, and providing summaries of the algorithms used, as a technical document.
