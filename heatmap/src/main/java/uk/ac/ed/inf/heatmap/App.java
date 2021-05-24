@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+/* ------ Marks Achieved = 24/25 ------ */
+
 /**
  * A class that generates a heat map (GeoJSON) to visualise the predictions made for the highest
  * sensor reading which will be seen in each area of the drone confinement area, partitioned
